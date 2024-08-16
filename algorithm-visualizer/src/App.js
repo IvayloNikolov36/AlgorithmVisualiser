@@ -1,14 +1,9 @@
 import './App.css';
+import MazeMatrix from './components/MazeMatrix';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Test
-        </p>
-      </header>
-    </div>
+    <MazeMatrix />
   );
 }
 
