@@ -53,3 +53,14 @@
 .wall {
   background-color: black;
 }
+
+.path {
+  background-color: aqua;
+}
+
+.primaryButton {
+  background-color: white;
+  color: black;
+  border: 2px solid #0D6EFD;
+  border-radius: 10%;
+}
