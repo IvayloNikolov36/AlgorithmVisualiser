@@ -25,16 +25,17 @@ export default function MazeMatrix() {
     const [matrix, setMatrix] = useState(initialMatrix);
     const stack = useRef([]);
     const visitedCells = useRef([]);
+    const isEndReached = useRef(false);
 
     const startBFS = () => {
         breadthFirstSearch(0, 0, matrix);
     }
 
-    const startDFS = () => {
-        depthFirstSearch(0, 0, matrix);
+    const startDFS = async () => {
+        await depthFirstSearch(0, 0, matrix);
     }
 
-    const depthFirstSearch = (startRow, startCol, matrix) => {
+    const depthFirstSearch = async (startRow, startCol, matrix) => {
 
         stack.current = [...stack.current, [startRow, startCol]];
 
@@ -47,7 +48,13 @@ export default function MazeMatrix() {
         const row = cell[0];
         const col = cell[1];
 
-        if (!isStartCell(row, col, matrix) && !isEndCell(row, col, matrix)) {
+        if (isEndCell(row, col, matrix)) {
+            isEndReached.current = true;
+            return;
+        }
+
+        if (!isStartCell(row, col, matrix)) {
+            await setTimeOutAfter(0.3);
             stepOnCell(row, col, matrix);
             visitedCells.current = [...visitedCells.current, [row, col]];
         }
@@ -56,12 +63,15 @@ export default function MazeMatrix() {
 
         for (let [cellRow, cellCol] of cellIndexes) {
             if (canStepOnCell(cellRow, cellCol, matrix, visitedCells.current)) {
-                depthFirstSearch(cellRow, cellCol, matrix);
+                if (isEndReached.current) {
+                    return;
+                }
+                await depthFirstSearch(cellRow, cellCol, matrix);
             }
         }
     }
 
-    const breadthFirstSearch = (startRow, startCol, matrix) => {
+    const breadthFirstSearch = async (startRow, startCol, matrix) => {
 
         const visited = [];
         const queue = [[startRow, startCol]];
@@ -76,6 +86,7 @@ export default function MazeMatrix() {
             }
 
             if (!isStartCell(row, col, matrix)) {
+                await setTimeOutAfter(0.3);
                 stepOnCell(row, col, matrix);
                 visited.push([row, col]);
             }
@@ -90,6 +101,14 @@ export default function MazeMatrix() {
         }
     }
 
+    const setTimeOutAfter = (seconds) => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve();
+          }, seconds * 1000);
+        });
+      }
+
     const canStepOnCell = (cellRow, cellCol, matrix, visited) => {
         return isInsideMatrix(cellRow, cellCol, matrix)
             && (isEmptyCell(cellRow, cellCol, matrix) || isEndCell(cellRow, cellCol, matrix))
@@ -98,6 +117,7 @@ export default function MazeMatrix() {
 
     const stepOnCell = (row, col, matrix) => {
         matrix[row][col] = pathCell;
+        //console.log(`Step on cell: ${row} - ${col}`);
         setMatrix(cloneDeep(matrix));
     }
 
