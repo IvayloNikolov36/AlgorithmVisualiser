@@ -25,14 +25,12 @@ export default function MazeMatrix() {
     ];
 
     const [matrix, setMatrix] = useState(initialMatrix);
-    const visitedCells = useRef([]);
     const isEndReached = useRef(false);
-    const cellsToUnstep = useRef([]);
 
     const startBFS = async () => {
-        const visitedCells = await breadthFirstSearch(0, 0, matrix);
+        const visitedCells = await breadthFirstSearch(0, 0);
 
-        unStepCells(visitedCells.map(vc => [vc.x, vc.y]).slice(0, -1), matrix);
+        unStepCells(visitedCells.map(vc => [vc.x, vc.y]).slice(0, -1));
 
         const path = reconstructPathAfterBFS(visitedCells);
 
@@ -44,22 +42,29 @@ export default function MazeMatrix() {
     }
 
     const startDFS = async () => {
-        await depthFirstSearch(0, 0, matrix, true);
-        unStepCells(cellsToUnstep.current, matrix);
+        const visitedCells = [];
+        const cellsToUnmark = [];
+        await depthFirstSearch(0, 0, visitedCells, cellsToUnmark, true);
+        unStepCells(cellsToUnmark);
         setMatrix(cloneDeep(matrix));
     }
 
-    const depthFirstSearch = async (startRow, startCol, matrix, isStartCell = false) => {
+    const depthFirstSearch = async (
+        startRow,
+        startCol,
+        visitedCells,
+        cellsToUnmark,
+        isStartCell = false) => {
 
-        if (isEndCell(startRow, startCol, matrix)) {
+        if (isEndCell(startRow, startCol)) {
             isEndReached.current = true;
             return;
         }
 
         if (!isStartCell) {
             await setTimeOutAfter(WaitSeconds);
-            stepOnCell(startRow, startCol, matrix);
-            visitedCells.current.push([startRow, startCol]);
+            stepOnCell(startRow, startCol);
+            visitedCells.push([startRow, startCol]);
         }
 
         const cellIndexes = getAdjacentCellIndexes(startRow, startCol);
@@ -68,32 +73,32 @@ export default function MazeMatrix() {
 
         for (let [cellRow, cellCol] of cellIndexes) {
 
-            if (canStepOnCell(cellRow, cellCol, matrix, visitedCells.current)) {
+            if (canStepOnCell(cellRow, cellCol, visitedCells)) {
 
                 if (isEndReached.current) {
                     return;
                 }
 
                 emptyCells++;
-                await depthFirstSearch(cellRow, cellCol, matrix);
+                await depthFirstSearch(cellRow, cellCol, visitedCells, cellsToUnmark, false);
 
                 if (isEndReached.current) {
                     return;
                 }
 
-                const hasAnyEmptyAjacent = hasAnyEmptyAdjacentCell(cellIndexes, matrix, visitedCells.current);
+                const hasAnyEmptyAjacent = hasAnyEmptyAdjacentCell(cellIndexes, visitedCells);
                 if (!hasAnyEmptyAjacent) {
-                    cellsToUnstep.current.push([startRow, startCol]);
+                    cellsToUnmark.push([startRow, startCol]);
                 }
             }
         }
 
         if (emptyCells === 0 && !isEndReached.current) {
-            cellsToUnstep.current.push([startRow, startCol]);
+            cellsToUnmark.push([startRow, startCol]);
         }
     }
 
-    const unStepCells = (cells, matrix) => {
+    const unStepCells = (cells) => {
         cells.forEach((cell) => {
             const row = cell[0];
             const col = cell[1];
@@ -116,11 +121,11 @@ export default function MazeMatrix() {
         return path;
     }
 
-    const hasAnyEmptyAdjacentCell = (cellIndexes, matrix, visited) => {
-        return cellIndexes.some(cell => canStepOnCell(cell[0], cell[1], matrix, visited));
+    const hasAnyEmptyAdjacentCell = (cellIndexes, visited) => {
+        return cellIndexes.some(cell => canStepOnCell(cell[0], cell[1], visited));
     }
 
-    const breadthFirstSearch = async (startRow, startCol, matrix) => {
+    const breadthFirstSearch = async (startRow, startCol) => {
 
         const visited = [];
         const queue = [new Node(startRow, startCol, null)];
@@ -130,14 +135,14 @@ export default function MazeMatrix() {
             const cell = queue.shift();
             const [row, col] = [cell.x, cell.y];
 
-            if (isEndCell(row, col, matrix)) {
+            if (isEndCell(row, col)) {
                 visitedWithPrev.push(cell);
                 return visitedWithPrev;
             }
 
-            if (!isStartCell(row, col, matrix)) {
+            if (!isStartCell(row, col)) {
                 await setTimeOutAfter(WaitSeconds);
-                stepOnCell(row, col, matrix);
+                stepOnCell(row, col);
                 visited.push([row, col]);
                 visitedWithPrev.push(cell);
             }
@@ -145,7 +150,7 @@ export default function MazeMatrix() {
             const cellIndexes = getAdjacentCellIndexes(row, col);
 
             cellIndexes.forEach(([cellRow, cellCol]) => {
-                if (canStepOnCell(cellRow, cellCol, matrix, visited)) {
+                if (canStepOnCell(cellRow, cellCol, visited)) {
                     queue.push(new Node(cellRow, cellCol, cell));
                 }
             });
@@ -160,13 +165,13 @@ export default function MazeMatrix() {
         });
     }
 
-    const canStepOnCell = (cellRow, cellCol, matrix, visited) => {
-        return isInsideMatrix(cellRow, cellCol, matrix)
-            && (isEmptyCell(cellRow, cellCol, matrix) || isEndCell(cellRow, cellCol, matrix))
+    const canStepOnCell = (cellRow, cellCol, visited) => {
+        return isInsideMatrix(cellRow, cellCol)
+            && (isEmptyCell(cellRow, cellCol) || isEndCell(cellRow, cellCol))
             && !visited.includes([cellRow, cellCol]);
     }
 
-    const stepOnCell = (row, col, matrix) => {
+    const stepOnCell = (row, col) => {
         matrix[row][col] = pathCell;
         setMatrix(cloneDeep(matrix));
     }
@@ -180,22 +185,22 @@ export default function MazeMatrix() {
         ];
     }
 
-    const isInsideMatrix = (row, col, matrix) => {
+    const isInsideMatrix = (row, col) => {
         return row >= 0
             && row < matrix.length
             && col >= 0
             && col < matrix[row].length;
     }
 
-    const isEmptyCell = (row, col, matrix) => {
+    const isEmptyCell = (row, col) => {
         return matrix[row][col] === emptyCell;
     }
 
-    const isEndCell = (row, col, matrix) => {
+    const isEndCell = (row, col) => {
         return matrix[row][col] === endCell;
     }
 
-    const isStartCell = (row, col, matrix) => {
+    const isStartCell = (row, col) => {
         return matrix[row][col] === startCell;
     }
 
