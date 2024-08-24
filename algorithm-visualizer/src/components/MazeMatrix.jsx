@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { cloneDeep } from 'lodash';
+import { Cell } from '../models/cell';
+import { setTimeOutAfter } from '../helpers/thread-sleep';
 import '../App.css';
 
 const WaitSeconds = 0.15;
@@ -30,7 +32,7 @@ export default function MazeMatrix() {
     const startBFS = async () => {
         const visitedCells = await breadthFirstSearch(0, 0);
 
-        unStepCells(visitedCells.map(vc => [vc.x, vc.y]).slice(0, -1));
+        unStepCells(visitedCells.map(cell => [cell.row, cell.col]).slice(0, -1));
 
         const path = reconstructPathAfterBFS(visitedCells);
 
@@ -110,11 +112,11 @@ export default function MazeMatrix() {
         const path = [];
 
         let cell = (visitedCells.pop()).previous;
-        path.push([cell.x, cell.y]);
+        path.push([cell.row, cell.col]);
 
         while (cell.previous.previous !== null) {
             const nextPathCell = cell.previous;
-            path.unshift([nextPathCell.x, nextPathCell.y]);
+            path.unshift([nextPathCell.row, nextPathCell.col]);
             cell = nextPathCell;
         }
 
@@ -126,43 +128,32 @@ export default function MazeMatrix() {
     }
 
     const breadthFirstSearch = async (startRow, startCol) => {
-
+        const queue = [new Cell(startRow, startCol, null)];
         const visited = [];
-        const queue = [new Node(startRow, startCol, null)];
-        const visitedWithPrev = [];
 
         while (true) {
             const cell = queue.shift();
-            const [row, col] = [cell.x, cell.y];
+            const [row, col] = [cell.row, cell.col];
 
             if (isEndCell(row, col)) {
-                visitedWithPrev.push(cell);
-                return visitedWithPrev;
+                visited.push(cell);
+                return visited;
             }
 
             if (!isStartCell(row, col)) {
                 await setTimeOutAfter(WaitSeconds);
                 stepOnCell(row, col);
-                visited.push([row, col]);
-                visitedWithPrev.push(cell);
+                visited.push(cell);
             }
 
             const cellIndexes = getAdjacentCellIndexes(row, col);
 
             cellIndexes.forEach(([cellRow, cellCol]) => {
-                if (canStepOnCell(cellRow, cellCol, visited)) {
-                    queue.push(new Node(cellRow, cellCol, cell));
+                if (canStepOnCell(cellRow, cellCol, visited.map(cell => [cell.row, cell.col]))) {
+                    queue.push(new Cell(cellRow, cellCol, cell));
                 }
             });
         }
-    }
-
-    const setTimeOutAfter = (seconds) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                resolve();
-            }, seconds * 1000);
-        });
     }
 
     const canStepOnCell = (cellRow, cellCol, visited) => {
@@ -202,14 +193,6 @@ export default function MazeMatrix() {
 
     const isStartCell = (row, col) => {
         return matrix[row][col] === startCell;
-    }
-
-    class Node {
-        constructor(x, y, previous) {
-            this.x = x;
-            this.y = y;
-            this.previous = previous;
-        }
     }
 
     return (
