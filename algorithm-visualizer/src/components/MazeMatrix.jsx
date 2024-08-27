@@ -1,35 +1,63 @@
-import { useRef, useState } from 'react';
-import { cloneDeep } from 'lodash';
+import { useEffect, useRef, useState } from 'react';
+import { cloneDeep, shuffle } from 'lodash';
 import { Cell } from '../models/cell';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
+import { StartCell, EndCell, PathCell, WallCell, EmptyCell } from '../constants/maze-constants';
 import '../App.css';
 
 const WaitSeconds = 0.15;
+const Size = 15;
 
 export default function MazeMatrix() {
 
-    const emptyCell = 'empty';
-    const wallCell = 'wall';
-    const endCell = 'end';
-    const pathCell = 'path';
-    const startCell = 'start';
-
-    const initialMatrix = [
-        [startCell, emptyCell, emptyCell, emptyCell, wallCell, wallCell, wallCell, wallCell, wallCell, wallCell, wallCell],
-        [wallCell, emptyCell, wallCell, wallCell, wallCell, emptyCell, emptyCell, emptyCell, emptyCell, emptyCell, wallCell],
-        [wallCell, emptyCell, wallCell, wallCell, emptyCell, emptyCell, wallCell, wallCell, wallCell, emptyCell, emptyCell],
-        [wallCell, emptyCell, wallCell, wallCell, wallCell, wallCell, wallCell, wallCell, emptyCell, wallCell, emptyCell],
-        [wallCell, emptyCell, wallCell, emptyCell, emptyCell, emptyCell, wallCell, wallCell, emptyCell, emptyCell, emptyCell],
-        [wallCell, emptyCell, wallCell, emptyCell, wallCell, emptyCell, emptyCell, emptyCell, emptyCell, wallCell, emptyCell],
-        [wallCell, emptyCell, emptyCell, emptyCell, wallCell, wallCell, wallCell, wallCell, wallCell, wallCell, emptyCell],
-        [wallCell, wallCell, wallCell, emptyCell, wallCell, wallCell, wallCell, wallCell, wallCell, wallCell, emptyCell],
-        [wallCell, wallCell, wallCell, emptyCell, emptyCell, emptyCell, emptyCell, emptyCell, wallCell, wallCell, endCell]
-    ];
-
-    const [matrix, setMatrix] = useState(initialMatrix);
+    const [matrix, setMatrix] = useState([]);
     const isEndReached = useRef(false);
 
+    useEffect(() => {
+        refreshMaze();
+    }, []);
+
+    const refreshMaze = () => {
+        setMatrix(cloneDeep(generateMaze(Size, Size)));
+    }
+
+    const generateMaze = (rows, cols) => {
+        const maze = [];
+
+        for (let row = 0; row < rows; row++) {
+            const innerArray = [];
+            for (let col = 0; col < cols; col++) {
+                innerArray.push(WallCell);
+            }
+            maze[row] = innerArray;
+        }
+
+        const directions = getAdjacentCellIndexes(0, 0);
+        constructCorridors(0, 0, maze, directions);
+
+        maze[0][0] = StartCell;
+        maze[rows - 1][cols - 1] = EndCell;
+
+        return maze;
+    }
+
+    const constructCorridors = (row, col, maze, directions) => {
+        maze[row][col] = EmptyCell;
+        const shuffledDirections = shuffle(directions);
+
+        shuffledDirections.forEach(([x, y]) => {
+            const stepX = row + x * 2;
+            const stepY = col + y * 2;
+
+            if (isInsideMatrix(stepX, stepY, maze) && isWallCell(stepX, stepY, maze)) {
+                maze[row + x][col + y] = EmptyCell;
+                constructCorridors(stepX, stepY, maze, directions);
+            }
+        });
+    }
+
     const startBFS = async () => {
+
         const visitedCells = await breadthFirstSearch(0, 0);
 
         unStepCells(visitedCells.map(cell => [cell.row, cell.col]).slice(0, -1));
@@ -37,7 +65,7 @@ export default function MazeMatrix() {
         const path = reconstructPathAfterBFS(visitedCells);
 
         path.forEach(([row, col]) => {
-            matrix[row][col] = pathCell;
+            matrix[row][col] = PathCell;
         });
 
         setMatrix(cloneDeep(matrix));
@@ -104,7 +132,7 @@ export default function MazeMatrix() {
         cells.forEach((cell) => {
             const row = cell[0];
             const col = cell[1];
-            matrix[row][col] = emptyCell;
+            matrix[row][col] = EmptyCell;
         });
     }
 
@@ -124,7 +152,7 @@ export default function MazeMatrix() {
     }
 
     const hasAnyEmptyAdjacentCell = (cellIndexes, visited) => {
-        return cellIndexes.some(cell => canStepOnCell(cell[0], cell[1], visited));
+        return cellIndexes.some(([cellRow, cellCol]) => canStepOnCell(cellRow, cellCol, visited));
     }
 
     const breadthFirstSearch = async (startRow, startCol) => {
@@ -157,13 +185,13 @@ export default function MazeMatrix() {
     }
 
     const canStepOnCell = (cellRow, cellCol, visited) => {
-        return isInsideMatrix(cellRow, cellCol)
-            && (isEmptyCell(cellRow, cellCol) || isEndCell(cellRow, cellCol))
+        return isInsideMatrix(cellRow, cellCol, matrix)
+            && (isEmptyCell(cellRow, cellCol, matrix) || isEndCell(cellRow, cellCol))
             && !visited.includes([cellRow, cellCol]);
     }
 
     const stepOnCell = (row, col) => {
-        matrix[row][col] = pathCell;
+        matrix[row][col] = PathCell;
         setMatrix(cloneDeep(matrix));
     }
 
@@ -176,35 +204,42 @@ export default function MazeMatrix() {
         ];
     }
 
-    const isInsideMatrix = (row, col) => {
+    const isInsideMatrix = (row, col, matrix) => {
         return row >= 0
             && row < matrix.length
             && col >= 0
             && col < matrix[row].length;
     }
 
-    const isEmptyCell = (row, col) => {
-        return matrix[row][col] === emptyCell;
+    const isEmptyCell = (row, col, matrix) => {
+        return matrix[row][col] === EmptyCell;
+    }
+
+    const isWallCell = (row, col, matrix) => {
+        return matrix[row][col] === WallCell;
     }
 
     const isEndCell = (row, col) => {
-        return matrix[row][col] === endCell;
+        return matrix[row][col] === EndCell;
     }
 
     const isStartCell = (row, col) => {
-        return matrix[row][col] === startCell;
+        return matrix[row][col] === StartCell;
     }
 
     return (
         <div className="container">
-            <button onClick={startBFS} className='primaryButton'>BFS</button>
-            <button onClick={startDFS} className='primaryButton'>DFS</button>
+            <div className="btnRow">
+                <button onClick={startBFS} className='primaryButton'>BFS</button>
+                <button onClick={refreshMaze} className='primaryButton'>Refresh Maze</button>
+                <button onClick={startDFS} className='primaryButton'>DFS</button>
+            </div>
             {
-                matrix.map((row) => {
-                    return <div className="row" key={row.toString()}>
+                matrix.map((row, rowIndex) => {
+                    return <div className="row" key={rowIndex}>
                         {
                             row.map((cell, colIndex) => {
-                                return <div className={`maze-cell ${cell}`} key={colIndex.toString()}>
+                                return <div className={`maze-cell ${cell}`} key={colIndex}>
                                 </div>
                             })
                         }
