@@ -1,9 +1,11 @@
 import './App.css';
-import MazeMatrix from './components/MazeMatrix';
+import ChessBoard from './components/ChessBoard';
+// import MazeMatrix from './components/MazeMatrix';
 
 function App() {
   return (
-    <MazeMatrix />
+    //<MazeMatrix />
+    <ChessBoard/>
   );
 }
 

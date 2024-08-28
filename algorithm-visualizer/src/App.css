@@ -25,6 +25,11 @@
  flex-direction: row;
 }
 
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
 .maze {
   display: flex;
   flex-direction: column;
@@ -69,4 +74,25 @@
   display: inline-flex;
   flex-direction: row;
   padding-bottom: 1rem;
+}
+
+.chessCell {
+  width: 3.75rem;
+  height: 3.75rem;
+  font-size: 3rem;
+  text-align: center;
+}
+
+.whiteCell {
+  background-color: white;
+}
+
+.blackCell {
+  background-color: rgb(32, 9, 9);
+}
+
+.chessBorder {
+  border-width: 0.750rem;
+  border-style: solid;
+  border-color: rgb(56, 15, 15);
 }
