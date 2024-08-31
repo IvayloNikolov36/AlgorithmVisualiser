@@ -5,7 +5,7 @@ import { cloneDeep } from "lodash";
 export default function ChessBoard() {
 
     const [board, setBoard] = useState([]);
-    const placedQueens = useRef(0);
+    const placedQueens = useRef([]);
     const attackedHorizontals = useRef([]);
     const attackedVerticals = useRef([]);
     const attackedLeftDiagonals = useRef([]);
@@ -45,41 +45,70 @@ export default function ChessBoard() {
 
     const tryPlaceQueen = (row, col) => {
 
-        if (row > board.length) {
+        if (row >= board.length) {
             return;
         }
 
-        const canPlace = canPlaceQueen(row, col);
+        let canPlace = canPlaceQueen(row, col);
 
         if (canPlace) {
-            const cellValue = board[row][col];
-            board[row][col] = [cellValue[0], true];
-            addAttackedPaths(row, col);
-            setBoard(cloneDeep(board));
-            placedQueens.current++;
+            placeQueen(row, col);
+            tryPlaceQueen(row + 1, 0);
+        } else {
+            let isPlaced = false;
 
-            tryPlaceQueen(row + 1, col + 1);
+            while (++col < board[row].length) {
+                canPlace = canPlaceQueen(row, col);
+
+                if (canPlace) {
+                    placeQueen(row, col);
+                    isPlaced = true;
+                    break;
+                }
+            }
+
+            if (isPlaced) {
+                tryPlaceQueen(row + 1, 0);
+            } else {
+                let [queenRow, queenCol] = placedQueens.current.pop();
+                unMarkQueen(queenRow, queenCol);
+
+                if (queenCol === board[queenRow].length - 1) {
+                    const [qRow, qCol] = placedQueens.current.pop();
+                    unMarkQueen(qRow, qCol);
+                    queenRow = qRow;
+                    queenCol = qCol;
+                }
+
+                setAttackedPaths(placedQueens.current);
+                tryPlaceQueen(queenRow, queenCol + 1);
+            }
         }
-
-        // if there is no way to place a queen on a row remove the last placed queen
-
-        const [nextRow, nextCol] = getNexRowAndCol(row, col);
-        tryPlaceQueen(nextRow, nextCol);
     }
 
-    const getNexRowAndCol = (row, col) => {
-        if (col + 1 >= board[0].length) {
-            return [row + 1, 0];
-        }
-
-        return [row, col + 1];
+    const placeQueen = (row, col) => {
+        board[row][col] = [board[row][col][0], true];
+        setBoard(cloneDeep(board));
+        placedQueens.current.push([row, col]);
+        setAttackedPaths(placedQueens.current);
     }
 
-    const addAttackedPaths = (cellRow, cellCol) => {
-        attackedHorizontals.current.push(cellRow);
-        attackedVerticals.current.push(cellCol);
-        attackedLeftDiagonals.current.push(getLeftDiagonal(cellRow, cellCol));
-        attackedRightDiagonals.current.push(getRightDiagonal(cellRow, cellCol));
+    const unMarkQueen = (queenRow, queenCol) => {
+        board[queenRow][queenCol] = [board[queenRow][queenCol][0], false];
+    }
+
+    const setAttackedPaths = (placedQueens) => {
+        attackedHorizontals.current = [];
+        attackedVerticals.current = [];
+        attackedLeftDiagonals.current = [];
+        attackedRightDiagonals.current = [];
+
+        placedQueens.forEach(([row, col]) => {
+            attackedHorizontals.current.push(row);
+            attackedVerticals.current.push(col);
+            attackedLeftDiagonals.current.push(getLeftDiagonal(row, col));
+            attackedRightDiagonals.current.push(getRightDiagonal(row, col));
+        });
     }
 
     const getLeftDiagonal = (row, col) => {
@@ -103,8 +132,16 @@ export default function ChessBoard() {
     const canPlaceQueen = (row, col) => {
         const isRowAttacked = attackedHorizontals.current.includes(row);
         const isColAttacked = attackedVerticals.current.includes(col);
-        const isLeftDiagonalAttacked = attackedLeftDiagonals.current.includes([row, col]);
-        const isRightDiagonalAttacked = attackedRightDiagonals.current.includes([row, col]);
+
+        const [leftDiagonalRow, leftDiagonalCol] = getLeftDiagonal(row, col);
+        const isLeftDiagonalAttacked = attackedLeftDiagonals
+            .current
+            .some(x => x[0] === leftDiagonalRow && x[1] === leftDiagonalCol);
+
+        const [rightDiagonalRow, rightDiagonalCol] = getRightDiagonal(row, col);
+        const isRightDiagonalAttacked = attackedRightDiagonals
+            .current
+            .some(x => x[0] === rightDiagonalRow && x[1] === rightDiagonalCol);
 
         return !isRowAttacked && !isColAttacked && !isLeftDiagonalAttacked && !isRightDiagonalAttacked;
     }
