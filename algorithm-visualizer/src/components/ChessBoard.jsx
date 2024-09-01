@@ -47,45 +47,58 @@ export default function ChessBoard() {
     }
 
     const tryPlaceQueen = (row, col) => {
-
         if (row >= BoardRows) {
             return;
         }
 
         let canPlace = canPlaceQueen(row, col);
-
         if (canPlace) {
             placeQueen(row, col);
             tryPlaceQueen(row + 1, 0);
+            return;
+        }
+
+        let isPlaced = false;
+
+        while (++col < board[row].length) {
+            canPlace = canPlaceQueen(row, col);
+
+            if (canPlace) {
+                placeQueen(row, col);
+                isPlaced = true;
+                break;
+            }
+        }
+
+        if (isPlaced) {
+            tryPlaceQueen(row + 1, 0);
         } else {
-            let isPlaced = false;
 
-            while (++col < board[row].length) {
-                canPlace = canPlaceQueen(row, col);
-
-                if (canPlace) {
-                    placeQueen(row, col);
-                    isPlaced = true;
-                    break;
-                }
+            if (placedQueens.current.length === 0) {
+                resetBoard();
+                showNoMoreVariantsAlert();
+                return;
             }
 
-            if (isPlaced) {
-                tryPlaceQueen(row + 1, 0);
-            } else {
-                let [queenRow, queenCol] = placedQueens.current.pop();
-                unMarkQueen(queenRow, queenCol);
+            let [queenRow, queenCol] = placedQueens.current.pop();
+            unMarkQueen(queenRow, queenCol);
 
-                if (queenCol === board[queenRow].length - 1) {
-                    const [qRow, qCol] = placedQueens.current.pop();
-                    unMarkQueen(qRow, qCol);
-                    queenRow = qRow;
-                    queenCol = qCol;
+            if (queenCol === board[queenRow].length - 1) {
+
+                if (placedQueens.current.length === 0) {
+                    resetBoard();
+                    showNoMoreVariantsAlert();
+                    return;
                 }
 
-                setAttackedPaths(placedQueens.current);
-                tryPlaceQueen(queenRow, queenCol + 1);
+                const [qRow, qCol] = placedQueens.current.pop();
+                unMarkQueen(qRow, qCol);
+                queenRow = qRow;
+                queenCol = qCol;
             }
+
+            setAttackedPaths(placedQueens.current);
+            tryPlaceQueen(queenRow, queenCol + 1);
         }
     }
 
@@ -131,7 +144,7 @@ export default function ChessBoard() {
         });
     }
 
-    const clearAttackedPaths  = () => {
+    const clearAttackedPaths = () => {
         attackedHorizontals.current = [];
         attackedVerticals.current = [];
         attackedLeftDiagonals.current = [];
@@ -172,6 +185,10 @@ export default function ChessBoard() {
 
         return !isRowAttacked && !isColAttacked && !isLeftDiagonalAttacked && !isRightDiagonalAttacked;
     }
+  
+    const showNoMoreVariantsAlert = () => {
+        alert("No more variants!");
+    }
 
     return (
         <div className="container">
@@ -184,10 +201,10 @@ export default function ChessBoard() {
                         return <div className="row" key={rowIndex}>
                             {
                                 rowArray.map(([cellColor, hasQueen], colIndex) => {
-                                    return<div
+                                    return <div
                                         onClick={() => clickBoardCell(rowIndex, colIndex)}
                                         className={rowIndex === 0
-                                            ? `chessCellFirstRow chessCell ${cellColor}`
+                                            ? `chessCellFirstRow ${cellColor}`
                                             : `chessCell ${cellColor}`}
                                         key={colIndex}
                                         style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
