@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { BlackCell, WhiteCell } from "../constants/board-constants";
 import { cloneDeep } from "lodash";
+import { setTimeOutAfter } from "../helpers/thread-sleep";
 
 const BoardRows = 8;
 const BoardCols = 8;
+const WaitInSeconds = 0.5;
 
 export default function ChessBoard() {
 
@@ -13,11 +15,16 @@ export default function ChessBoard() {
     const attackedVerticals = useRef([]);
     const attackedLeftDiagonals = useRef([]);
     const attackedRightDiagonals = useRef([]);
+    const demonstration = useRef(false);
 
     useEffect(() => {
         const board = generateBoard();
         setBoard(board);
     }, []);
+
+    const toggleShowAlgorithm = () => {
+        demonstration.current = !demonstration.current;
+    }
 
     const generateBoard = () => {
         const board = [];
@@ -31,7 +38,7 @@ export default function ChessBoard() {
                 const cellColor = col % 2 === 0
                     ? startWithWhiteCell ? WhiteCell : BlackCell
                     : startWithWhiteCell ? BlackCell : WhiteCell;
-                const cellValue = [cellColor, false];
+                const cellValue = [cellColor, false, false];
                 rowArray.push(cellValue);
             }
 
@@ -42,19 +49,19 @@ export default function ChessBoard() {
         return board;
     }
 
-    const placeQueens = () => {
-        tryPlaceQueen(0, 0);
+    const placeQueens = async () => {
+        await tryPlaceQueen(0, 0);
     }
 
-    const tryPlaceQueen = (row, col) => {
+    const tryPlaceQueen = async (row, col) => {
         if (row >= BoardRows) {
             return;
         }
 
         let canPlace = canPlaceQueen(row, col);
         if (canPlace) {
-            placeQueen(row, col);
-            tryPlaceQueen(row + 1, 0);
+            await placeQueen(row, col);
+            await tryPlaceQueen(row + 1, 0);
             return;
         }
 
@@ -64,14 +71,14 @@ export default function ChessBoard() {
             canPlace = canPlaceQueen(row, col);
 
             if (canPlace) {
-                placeQueen(row, col);
+                await placeQueen(row, col);
                 isPlaced = true;
                 break;
             }
         }
 
         if (isPlaced) {
-            tryPlaceQueen(row + 1, 0);
+            await tryPlaceQueen(row + 1, 0);
         } else {
 
             if (placedQueens.current.length === 0) {
@@ -81,7 +88,7 @@ export default function ChessBoard() {
             }
 
             let [queenRow, queenCol] = placedQueens.current.pop();
-            unMarkQueen(queenRow, queenCol);
+            await unMarkQueen(queenRow, queenCol);
 
             if (queenCol === board[queenRow].length - 1) {
 
@@ -92,28 +99,39 @@ export default function ChessBoard() {
                 }
 
                 const [qRow, qCol] = placedQueens.current.pop();
-                unMarkQueen(qRow, qCol);
+                await unMarkQueen(qRow, qCol);
                 queenRow = qRow;
                 queenCol = qCol;
             }
 
             setAttackedPaths(placedQueens.current);
-            tryPlaceQueen(queenRow, queenCol + 1);
+            await tryPlaceQueen(queenRow, queenCol + 1);
         }
     }
 
-    const placeQueen = (row, col) => {
+    const placeQueen = async (row, col) => {
         board[row][col] = [board[row][col][0], true];
         setBoard(cloneDeep(board));
         placedQueens.current.push([row, col]);
         setAttackedPaths(placedQueens.current);
+        if (demonstration.current) {
+            await setTimeOutAfter(WaitInSeconds);
+        }
     }
 
-    const unMarkQueen = (queenRow, queenCol) => {
-        board[queenRow][queenCol] = [board[queenRow][queenCol][0], false];
+    const unMarkQueen = async (queenRow, queenCol) => {
+        const cellValue = board[queenRow][queenCol];
+
+        if (demonstration.current) {
+            board[queenRow][queenCol] = [cellValue[0], true, true];
+            setBoard(cloneDeep(board));
+            await setTimeOutAfter(WaitInSeconds);
+        }
+
+        board[queenRow][queenCol] = [cellValue[0], false, false];
     }
 
-    const clickBoardCell = (row, col) => {
+    const clickBoardCell = async (row, col) => {
 
         if (row !== 0) {
             return;
@@ -123,7 +141,7 @@ export default function ChessBoard() {
             resetBoard();
         }
 
-        tryPlaceQueen(row, col);
+        await tryPlaceQueen(row, col);
     }
 
     const resetBoard = () => {
@@ -194,13 +212,14 @@ export default function ChessBoard() {
         <div className="container">
             <div className="btnRow">
                 <button onClick={placeQueens} className='primaryButton'>Place Queens</button>
+                <button onClick={toggleShowAlgorithm} className='primaryButton'>Animate</button>
             </div>
             <div className="col chessBorder">
                 {
                     board.map((rowArray, rowIndex) => {
                         return <div className="row" key={rowIndex}>
                             {
-                                rowArray.map(([cellColor, hasQueen], colIndex) => {
+                                rowArray.map(([cellColor, hasQueen, showRed], colIndex) => {
                                     return <div
                                         onClick={() => clickBoardCell(rowIndex, colIndex)}
                                         className={rowIndex === 0
@@ -209,7 +228,7 @@ export default function ChessBoard() {
                                         key={colIndex}
                                         style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
                                     >
-                                        {hasQueen ? <span>&#9813;</span> : ''}
+                                        {hasQueen ? <span className={showRed ? 'redQueen' : ''}>&#9813;</span> : ''}
                                     </div>
                                 })
                             }

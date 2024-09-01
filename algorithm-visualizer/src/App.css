@@ -92,6 +92,10 @@
   background-color: rgb(32, 9, 9);
 }
 
+.redQueen {
+  color: red;
+}
+
 .chessBorder {
   border-width: 0.750rem;
   border-style: solid;
