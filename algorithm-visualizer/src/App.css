@@ -76,7 +76,8 @@
   padding-bottom: 1rem;
 }
 
-.chessCell {
+.chessCell,
+.chessCellFirstRow {
   width: 3.65rem;
   height: 3.65rem;
   font-size: 3rem;
@@ -95,4 +96,9 @@
   border-width: 0.750rem;
   border-style: solid;
   border-color: rgb(56, 15, 15);
+}
+
+.chessCellFirstRow:hover {
+  background-color: #0D6EFD;
+  cursor: pointer;
 }

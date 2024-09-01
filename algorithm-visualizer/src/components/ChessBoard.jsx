@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { BlackCell, WhiteCell } from "../constants/board-constants";
 import { cloneDeep } from "lodash";
 
+const BoardRows = 8;
+const BoardCols = 8;
+
 export default function ChessBoard() {
 
     const [board, setBoard] = useState([]);
@@ -21,10 +24,10 @@ export default function ChessBoard() {
 
         let startWithWhiteCell = true;
 
-        for (let row = 0; row < 8; row++) {
+        for (let row = 0; row < BoardRows; row++) {
             const rowArray = [];
 
-            for (let col = 0; col < 8; col++) {
+            for (let col = 0; col < BoardCols; col++) {
                 const cellColor = col % 2 === 0
                     ? startWithWhiteCell ? WhiteCell : BlackCell
                     : startWithWhiteCell ? BlackCell : WhiteCell;
@@ -45,7 +48,7 @@ export default function ChessBoard() {
 
     const tryPlaceQueen = (row, col) => {
 
-        if (row >= board.length) {
+        if (row >= BoardRows) {
             return;
         }
 
@@ -97,11 +100,28 @@ export default function ChessBoard() {
         board[queenRow][queenCol] = [board[queenRow][queenCol][0], false];
     }
 
+    const clickBoardCell = (row, col) => {
+
+        if (row !== 0) {
+            return;
+        }
+
+        if (placedQueens.current.length > 0) {
+            resetBoard();
+        }
+
+        tryPlaceQueen(row, col);
+    }
+
+    const resetBoard = () => {
+        placedQueens.current = [];
+        clearAttackedPaths();
+        board.forEach(row => row.forEach(cell => cell[1] = false));
+        setBoard(cloneDeep(board));
+    }
+
     const setAttackedPaths = (placedQueens) => {
-        attackedHorizontals.current = [];
-        attackedVerticals.current = [];
-        attackedLeftDiagonals.current = [];
-        attackedRightDiagonals.current = [];
+        clearAttackedPaths();
 
         placedQueens.forEach(([row, col]) => {
             attackedHorizontals.current.push(row);
@@ -109,6 +129,13 @@ export default function ChessBoard() {
             attackedLeftDiagonals.current.push(getLeftDiagonal(row, col));
             attackedRightDiagonals.current.push(getRightDiagonal(row, col));
         });
+    }
+
+    const clearAttackedPaths  = () => {
+        attackedHorizontals.current = [];
+        attackedVerticals.current = [];
+        attackedLeftDiagonals.current = [];
+        attackedRightDiagonals.current = [];
     }
 
     const getLeftDiagonal = (row, col) => {
@@ -157,7 +184,11 @@ export default function ChessBoard() {
                         return <div className="row" key={rowIndex}>
                             {
                                 rowArray.map(([cellColor, hasQueen], colIndex) => {
-                                    return <div className={`chessCell ${cellColor}`}
+                                    return<div
+                                        onClick={() => clickBoardCell(rowIndex, colIndex)}
+                                        className={rowIndex === 0
+                                            ? `chessCellFirstRow chessCell ${cellColor}`
+                                            : `chessCell ${cellColor}`}
                                         key={colIndex}
                                         style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
                                     >
