@@ -1,18 +1,3 @@
-.App {
-  text-align: center;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
 .container {
   display: flex;
   flex-direction: column;
@@ -105,4 +90,105 @@
 .chessCellFirstRow:hover {
   background-color: #0D6EFD;
   cursor: pointer;
+}
+
+/* --- Hanoi Tower --- */
+
+.pegsFundament {
+  background-color: grey;
+  border: solid;
+  border-color: darkgrey;
+  border-radius: 10px;
+  width: 95%;
+  height: 3.5rem;
+  margin-left: 0.625rem;
+  margin-right: 0.625rem;
+}
+
+.pegsContainer {
+  display: flex;
+  flex-direction: row;
+  width: 95%;
+  height: 20rem;
+  justify-content: space-around;
+  margin-top: 0.5rem;
+}
+
+.pegsSymbols {
+  display: flex;
+  flex-direction: row;
+  width: 95%;
+  justify-content: space-around;
+  margin-top: 0.5rem;
+}
+
+.pegCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.peg {
+  height: 20rem;
+  width: 2.5rem;
+  background-color: grey;
+  border-top: solid;
+  border-left: solid;
+  border-right: solid;
+  border-color: darkgray;
+  border-top-left-radius: 0.625rem;
+  border-top-right-radius: 0.625rem;
+}
+
+.disksCol {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  align-items: center;
+}
+
+.disk {
+  display: flex;
+  flex-direction: row;
+  border-radius: 0.625rem;
+  border: solid;
+  height: 2.5rem;
+}
+
+.extraLargeDisk {
+  border-color: rgb(46, 25, 233);
+  background-color: rgb(7, 5, 136);
+  width: 23rem;
+}
+
+.largeDisk {
+  border-color: rgb(98, 9, 180);
+  background-color: rgb(66, 5, 122);
+  width: 20rem;
+}
+
+.mediumDisk {
+  border-color: rgb(0, 255, 76);
+  background-color: rgb(24, 236, 34);
+  width: 17rem;
+}
+
+.smallDisk {
+  border-color: rgb(223, 247, 7);
+  background-color: rgb(250, 246, 12);
+  width: 14rem;
+}
+
+.extraSmallDisk {
+  border-color: rgb(247, 145, 51);
+  background-color: rgb(247, 128, 16);
+  width: 11rem;
+}
+
+.megaSmallDisk {
+  border-color: rgb(243, 78, 180);
+  background-color: rgb(243, 33, 162);
+  width: 8.5rem;
 }
