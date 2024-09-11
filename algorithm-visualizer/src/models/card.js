@@ -7,5 +7,8 @@ export class Card {
         this.color = (suit === CardSuitEnum.Diamonds || suit === CardSuitEnum.Hearts)
             ? 'red'
             : 'black';
+        this.grayOut = false;
+        this.showLeftSwapArrow = false;
+        this.showRightSwapArrow = false;
     }    
 }
