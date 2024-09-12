@@ -1,5 +1,5 @@
 import './App.css';
-import BubbleSort from './components/BubbleSort';
+import SortingAlgorithms from './components/SortingAlgorithms';
 //import ChessBoard from './components/ChessBoard';
 //import HanoiTower from './components/HanoiTower';
 // import MazeMatrix from './components/MazeMatrix';
@@ -9,7 +9,7 @@ function App() {
     //<MazeMatrix />
     //<ChessBoard/>
     // <HanoiTower/>
-    <BubbleSort />
+    <SortingAlgorithms />
   );
 }
 

@@ -7,7 +7,7 @@ import { cloneDeep } from "lodash";
 
 const WaitInSeconds = 1;
 
-export default function BubbleSort() {
+export default function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
 
