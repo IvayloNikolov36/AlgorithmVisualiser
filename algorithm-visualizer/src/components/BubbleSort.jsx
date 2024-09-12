@@ -13,21 +13,68 @@ export default function BubbleSort() {
 
     useEffect(() => {
         const initialCards = [
-            new Card(6, CardSuitEnum.Diamonds),
-            new Card(10, CardSuitEnum.Clubs),
-            new Card(7, CardSuitEnum.Hearts),
-            new Card(5, CardSuitEnum.Clubs),
-            new Card(2, CardSuitEnum.Diamonds),
-            new Card(4, CardSuitEnum.Clubs),
-            new Card(9, CardSuitEnum.Spades),
+            new Card(10, CardSuitEnum.Diamonds),
+            new Card(9, CardSuitEnum.Clubs),
+            new Card(4, CardSuitEnum.Hearts),
+            new Card(7, CardSuitEnum.Clubs),
             new Card(8, CardSuitEnum.Diamonds),
-            new Card(3, CardSuitEnum.Hearts)
+            new Card(10, CardSuitEnum.Hearts),
+            new Card(8, CardSuitEnum.Clubs),
+            new Card(7, CardSuitEnum.Diamonds)
         ];
 
         setCards(initialCards);
     }, [])
 
-    const startSorting = async () => {
+    const startQuickSort = async () => {
+        let startIndex = 1;
+        let endIndex = cards.length - 1;
+
+        const sortedElementIndex = await quickSortSortPartition(startIndex, endIndex);
+
+        startIndex = 1;
+        endIndex = sortedElementIndex;
+        while (endIndex >= 1) {
+            endIndex = await quickSortSortPartition(startIndex, endIndex);
+        }
+        
+        startIndex = sortedElementIndex + 1;
+        endIndex = cards.length - 1;
+        while (cards.length - startIndex > 1) {
+            startIndex = await quickSortSortPartition(startIndex, endIndex);
+        }
+
+        cards.forEach(card => card.grayOut = false);
+        setCards(cloneDeep(cards));
+    }
+
+    const quickSortSortPartition = async (startIndex, endIndex) => {
+        let pivot = cards[0].value;
+        let storeIndex = 1;
+
+        for (let i = startIndex; i <= endIndex; i++) {
+            if (cards[i].value <= pivot) {
+                if (i !== storeIndex) {
+                    await swap(cards, storeIndex, i);
+
+                    setCards(cloneDeep(cards));
+                    await setTimeOutAfter(WaitInSeconds);
+                }
+                storeIndex++;
+            }
+        }
+
+        const sortedIndex = storeIndex - 1;
+        await swap(cards, 0, sortedIndex);
+        cards[sortedIndex].grayOut = true;
+
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
+
+        return sortedIndex;
+    }
+
+    const startBubbleSort = async () => {
 
         let cardsTraverseCount = 0;
         let firstIndex = 0;
@@ -100,7 +147,8 @@ export default function BubbleSort() {
     return (
         <div className="container">
             <div className="btnRow">
-                <button onClick={startSorting} className='primaryButton'>Sort</button>
+                <button onClick={startBubbleSort} className='primaryButton'>Bubble Sort</button>
+                <button onClick={startQuickSort} className='primaryButton'>Quick Sort</button>
             </div>
             <div className="card-container">
                 {
