@@ -5,7 +5,7 @@ import { CardSuitEnum } from "../enums/card-suit.enum";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
 import { cloneDeep } from "lodash";
 
-const WaitInSeconds = 0.4;
+const WaitInSeconds = 0.7;
 
 export default function SortingAlgorithms() {
 
@@ -31,7 +31,7 @@ export default function SortingAlgorithms() {
         let endIndex = cards.length - 1;
 
         await quickSortSortPartition(startIndex, endIndex);
-        
+
         cards.forEach(card => card.grayOut = false);
         setCards(cloneDeep(cards));
     }
@@ -116,6 +116,53 @@ export default function SortingAlgorithms() {
         }
     }
 
+    const startInsertionSort = async () => {
+        let index = 1;
+
+        while (index < cards.length) {
+
+            const currentValue = cards[index].value;
+            const previousValue = cards[index - 1].value;
+
+            if (currentValue < previousValue) {
+
+                const extracted = cards[index];
+                // TODO: create a new div to hold the extracted card
+                cards[index] = new Card(null, null);
+
+                await moveForward(cards, index - 1);
+
+                let insertIndex = index - 1;
+
+                while (insertIndex >= 0) {
+                    if (insertIndex === 0 || extracted.value >= cards[insertIndex - 1].value) {
+                        cards[insertIndex] = extracted;
+                        await updateCards();
+                        break;
+                    }
+                    await moveForward(cards, insertIndex - 1);
+                    insertIndex--;
+                }
+            }
+
+            index++;
+        }
+
+        await updateCards();
+    }
+
+    const moveForward = async (cards, index) => {
+        cards[index].showRightSwapArrow = true;
+        await updateCards();
+
+        const temp = cards[index];
+        cards[index] = cards[index + 1];
+        cards[index + 1] = temp;
+
+        cards[index + 1].showRightSwapArrow = false;
+        await updateCards();
+    }
+
     const swap = async (cards, fromIndex, toIndex) => {
         await showCardsSwapArrows(cards[fromIndex], cards[toIndex]);
 
@@ -153,6 +200,7 @@ export default function SortingAlgorithms() {
             <div className="btnRow">
                 <button onClick={startBubbleSort} className='primaryButton'>Bubble Sort</button>
                 <button onClick={startQuickSort} className='primaryButton'>Quick Sort</button>
+                <button onClick={startInsertionSort} className='primaryButton'>Insertion Sort</button>
             </div>
             <div className="card-container">
                 {
