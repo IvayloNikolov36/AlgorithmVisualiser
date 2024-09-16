@@ -5,7 +5,7 @@ import { CardSuitEnum } from "../enums/card-suit.enum";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
 import { cloneDeep } from "lodash";
 
-const WaitInSeconds = 1;
+const WaitInSeconds = 0.4;
 
 export default function SortingAlgorithms() {
 
@@ -27,36 +27,35 @@ export default function SortingAlgorithms() {
     }, [])
 
     const startQuickSort = async () => {
-        let startIndex = 1;
+        let startIndex = 0;
         let endIndex = cards.length - 1;
 
-        const sortedElementIndex = await quickSortSortPartition(startIndex, endIndex);
-
-        startIndex = 1;
-        endIndex = sortedElementIndex;
-        while (endIndex >= 1) {
-            endIndex = await quickSortSortPartition(startIndex, endIndex);
-        }
+        await quickSortSortPartition(startIndex, endIndex);
         
-        startIndex = sortedElementIndex + 1;
-        endIndex = cards.length - 1;
-        while (cards.length - startIndex > 1) {
-            startIndex = await quickSortSortPartition(startIndex, endIndex);
-        }
-
         cards.forEach(card => card.grayOut = false);
         setCards(cloneDeep(cards));
     }
 
     const quickSortSortPartition = async (startIndex, endIndex) => {
-        let pivot = cards[0].value;
-        let storeIndex = 1;
+        if (startIndex > endIndex) {
+            return;
+        }
 
-        for (let i = startIndex; i <= endIndex; i++) {
-            if (cards[i].value <= pivot) {
+        if (startIndex === endIndex) {
+            cards[startIndex].grayOut = true;
+            await updateCards();
+            return;
+        }
+
+        const pivotValue = cards[startIndex].value;
+        let storeIndex = startIndex + 1;
+
+        for (let i = startIndex + 1; i <= endIndex; i++) {
+            const currentValue = cards[i].value;
+
+            if (currentValue <= pivotValue) {
                 if (i !== storeIndex) {
                     await swap(cards, storeIndex, i);
-
                     setCards(cloneDeep(cards));
                     await setTimeOutAfter(WaitInSeconds);
                 }
@@ -65,13 +64,18 @@ export default function SortingAlgorithms() {
         }
 
         const sortedIndex = storeIndex - 1;
-        await swap(cards, 0, sortedIndex);
+        await swap(cards, startIndex, sortedIndex);
         cards[sortedIndex].grayOut = true;
 
+        await updateCards();
+
+        await quickSortSortPartition(startIndex, sortedIndex - 1);
+        await quickSortSortPartition(sortedIndex + 1, endIndex);
+    }
+
+    const updateCards = async () => {
         setCards(cloneDeep(cards));
         await setTimeOutAfter(WaitInSeconds);
-
-        return sortedIndex;
     }
 
     const startBubbleSort = async () => {
