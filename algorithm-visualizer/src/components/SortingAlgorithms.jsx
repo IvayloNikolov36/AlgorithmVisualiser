@@ -151,6 +151,46 @@ export default function SortingAlgorithms() {
         await updateCards();
     }
 
+    const startSelectionSort = async () => {
+        let iteration = 0;
+
+        while (iteration < cards.length - 1) {
+
+            const initialMinValueIndex = iteration;
+            let minValueIndex = initialMinValueIndex;
+            let minValue = cards[minValueIndex].value;
+    
+            for (let index = iteration + 1; index < cards.length; index++) {
+                const currentValue = cards[index].value;
+                if (currentValue < minValue) {
+                    minValue = currentValue;
+                    minValueIndex = index;
+                }
+            }
+
+            if (initialMinValueIndex !== minValueIndex) {
+                await swap(cards, initialMinValueIndex, minValueIndex);
+            }
+    
+            await setCardSorted(cards, initialMinValueIndex);
+
+            iteration++;
+        }
+
+        await setCardSorted(cards, cards.length - 1);
+        await clearSortedFlag(cards);
+    }
+
+    const setCardSorted = async (cards, cardIndex) => {
+        cards[cardIndex].grayOut = true;
+        await updateCards();
+    }
+
+    const clearSortedFlag = async (cards) => {
+        cards.forEach(card => card.grayOut = false);
+        await updateCards();
+    }
+
     const moveForward = async (cards, index) => {
         cards[index].showRightSwapArrow = true;
         await updateCards();
@@ -201,6 +241,7 @@ export default function SortingAlgorithms() {
                 <button onClick={startBubbleSort} className='primaryButton'>Bubble Sort</button>
                 <button onClick={startQuickSort} className='primaryButton'>Quick Sort</button>
                 <button onClick={startInsertionSort} className='primaryButton'>Insertion Sort</button>
+                <button onClick={startSelectionSort} className='primaryButton'>Selection Sort</button>
             </div>
             <div className="card-container">
                 {
