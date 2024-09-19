@@ -10,5 +10,7 @@ export class Card {
         this.grayOut = false;
         this.showLeftSwapArrow = false;
         this.showRightSwapArrow = false;
+        this.selected = false;
+        this.label = '';
     }    
 }

@@ -214,11 +214,22 @@
   padding: 0.2rem;
 }
 
+.cardLabel {
+  height: 1.875rem;
+  font-size: larger;
+  color: #0D6EFD;
+  text-align: center;
+}
+
 .grayOutCard {
   background-color: rgba(169, 169, 169, 0.400);
 }
 
-.card-container {
+.selectedCard {
+  border-color: #0D6EFD;
+}
+
+.cards-container {
   width: 95%;
   display: flex;
   flex-direction: row;

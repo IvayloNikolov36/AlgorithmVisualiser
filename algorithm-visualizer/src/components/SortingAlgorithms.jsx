@@ -159,26 +159,52 @@ export default function SortingAlgorithms() {
             const initialMinValueIndex = iteration;
             let minValueIndex = initialMinValueIndex;
             let minValue = cards[minValueIndex].value;
-    
+
+            cards[minValueIndex].label = 'Min';
+            await updateCards();
+
             for (let index = iteration + 1; index < cards.length; index++) {
+                await setCardSelected(cards, index);
+
                 const currentValue = cards[index].value;
                 if (currentValue < minValue) {
                     minValue = currentValue;
-                    minValueIndex = index;
+                    cards[minValueIndex].label = '';
+                    minValueIndex = index; 
+                    cards[minValueIndex].label = 'Min';
                 }
+
+                await clearCardSelected(cards, index);
             }
 
             if (initialMinValueIndex !== minValueIndex) {
+                cards[minValueIndex].label = '';
                 await swap(cards, initialMinValueIndex, minValueIndex);
             }
-    
+
             await setCardSorted(cards, initialMinValueIndex);
 
             iteration++;
         }
 
+        clearCardLabels(cards);
         await setCardSorted(cards, cards.length - 1);
         await clearSortedFlag(cards);
+    }
+
+    const setCardSelected = async (cards, cardIndex) => {
+        cards[cardIndex].selected = true;
+        await updateCards();
+    }
+
+    const clearCardSelected = async (cards, cardIndex) => {
+        cards[cardIndex].selected = false;
+        await updateCards();
+    }
+
+    const clearCardLabels = async (cards) => {
+        cards.forEach(c => c.label = '');
+        setCards(cards);
     }
 
     const setCardSorted = async (cards, cardIndex) => {
@@ -243,30 +269,37 @@ export default function SortingAlgorithms() {
                 <button onClick={startInsertionSort} className='primaryButton'>Insertion Sort</button>
                 <button onClick={startSelectionSort} className='primaryButton'>Selection Sort</button>
             </div>
-            <div className="card-container">
+            <div className="cards-container">
+
                 {
                     cards.map((card, index) => {
-                        return <div
-                            className={`card ${card.grayOut ? 'grayOutCard' : ''}`}
-                            key={index}
-                        >
-                            <div className="row">
-                                {getCardDetailsRow(card)}
+                        return <div className="col">
+                            <div className="cardLabel">
+                                <span>{card.label}</span>
                             </div>
-                            {
-                                (card.showLeftSwapArrow || card.showRightSwapArrow) &&
-                                <div className={card.showLeftSwapArrow ? 'arrow-left' : 'arrow-right'}>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+                            <div
+                                className={`card ${card.grayOut ? 'grayOutCard' : ''} ${card.selected ? 'selectedCard' : ''}`}
+                                key={index}
+                            >
+                                <div className="row">
+                                    {getCardDetailsRow(card)}
                                 </div>
-                            }
-                            <div className="row verticalFlip">
-                                {getCardDetailsRow(card)}
+                                {
+                                    (card.showLeftSwapArrow || card.showRightSwapArrow) &&
+                                    <div className={card.showLeftSwapArrow ? 'arrow-left' : 'arrow-right'}>
+                                        <span></span>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                }
+                                <div className="row verticalFlip">
+                                    {getCardDetailsRow(card)}
+                                </div>
                             </div>
                         </div>
                     })
                 }
+
             </div>
         </div>
     );
