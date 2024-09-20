@@ -13,14 +13,18 @@ const CardsCount = 8;
 export default function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
+    const [unsortedCards, setUnsortedCards] = useState([]);
     const [isSorting, setIsSorting] = useState(false);
 
     useEffect(() => {
         const initialCards = createCards();
+        setUnsortedCards(cloneDeep(initialCards));
         setCards(initialCards);
     }, [])
 
     const startQuickSort = async () => {
+        setIsSorting(true);
+
         let startIndex = 0;
         let endIndex = cards.length - 1;
 
@@ -28,6 +32,8 @@ export default function SortingAlgorithms() {
 
         cards.forEach(card => card.grayOut = false);
         setCards(cloneDeep(cards));
+
+        setIsSorting(false);
     }
 
     const quickSortSortPartition = async (startIndex, endIndex) => {
@@ -109,9 +115,13 @@ export default function SortingAlgorithms() {
             firstIndex++;
             secondIndex++;
         }
+
+        setIsSorting(false);
     }
 
     const startInsertionSort = async () => {
+        setIsSorting(true);
+
         let index = 1;
 
         while (index < cards.length) {
@@ -144,9 +154,12 @@ export default function SortingAlgorithms() {
         }
 
         await updateCards();
+        setIsSorting(false);
     }
 
     const startSelectionSort = async () => {
+        setIsSorting(true);
+
         let iteration = 0;
 
         while (iteration < cards.length - 1) {
@@ -184,6 +197,8 @@ export default function SortingAlgorithms() {
         clearCardLabels(cards);
         await setCardSorted(cards, cards.length - 1);
         await clearSortedFlag(cards);
+
+        setIsSorting(false);
     }
 
     const setCardSelected = async (cards, cardIndex) => {
@@ -242,7 +257,9 @@ export default function SortingAlgorithms() {
     }
 
     const generateNewCards = () => {
-        setCards(createCards());
+        const cards = createCards();
+        setUnsortedCards(cloneDeep(cards));
+        setCards(cards);
     }
 
     const createCards = () => {
@@ -269,6 +286,10 @@ export default function SortingAlgorithms() {
         }
     }
 
+    const reset = () => {
+        setCards(cloneDeep(unsortedCards));
+    }
+
     const showCardsSwapArrows = async (firstCard, secondCard) => {
         firstCard.showRightSwapArrow = true;
         secondCard.showLeftSwapArrow = true;
@@ -292,7 +313,14 @@ export default function SortingAlgorithms() {
                         variant="outline-primary"
                         disabled={isSorting}
                     >
-                        Generate New
+                        Generate New Cards
+                    </Button>
+                    <Button
+                        onClick={reset}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Reset
                     </Button>
                 </ButtonGroup>
             </div>
