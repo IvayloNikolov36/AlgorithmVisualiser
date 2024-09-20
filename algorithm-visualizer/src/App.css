@@ -1,9 +1,9 @@
-.container {
+/* .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 5%;
-}
+} */
 
 .row {
  display: flex;
@@ -67,10 +67,12 @@
   padding-bottom: 1rem;
 }
 
+/* --- Chess Board --- */
+
 .chessCell,
 .chessCellFirstRow {
-  width: 3.65rem;
-  height: 3.65rem;
+  width: 3.65rem !important;
+  height: 3.65rem !important;
   font-size: 3rem;
   text-align: center;
 }

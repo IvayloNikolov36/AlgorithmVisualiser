@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BlackCell, WhiteCell } from "../constants/board-constants";
 import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
+import { ButtonGroup, Button } from "react-bootstrap";
 
 const BoardRows = 8;
 const BoardCols = 8;
@@ -203,39 +204,44 @@ export default function ChessBoard() {
 
         return !isRowAttacked && !isColAttacked && !isLeftDiagonalAttacked && !isRightDiagonalAttacked;
     }
-  
+
     const showNoMoreVariantsAlert = () => {
         alert("No more variants!");
     }
 
     return (
         <div className="container">
-            <div className="btnRow">
-                <button onClick={placeQueens} className='primaryButton'>Place Queens</button>
-                <button onClick={toggleShowAlgorithm} className='primaryButton'>Animate</button>
+            <div className="d-flex justify-content-center py-2">
+                <ButtonGroup>
+                    <Button onClick={placeQueens} variant="outline-primary">Place Queens</Button>
+                    <Button onClick={toggleShowAlgorithm} variant="outline-primary">Animate</Button>
+                </ButtonGroup>
             </div>
-            <div className="col chessBorder">
-                {
-                    board.map((rowArray, rowIndex) => {
-                        return <div className="row" key={rowIndex}>
-                            {
-                                rowArray.map(([cellColor, hasQueen, showRed], colIndex) => {
-                                    return <div
-                                        onClick={() => clickBoardCell(rowIndex, colIndex)}
-                                        className={rowIndex === 0
-                                            ? `chessCellFirstRow ${cellColor}`
-                                            : `chessCell ${cellColor}`}
-                                        key={colIndex}
-                                        style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
-                                    >
-                                        {hasQueen ? <span className={showRed ? 'redQueen' : ''}>&#9813;</span> : ''}
-                                    </div>
-                                })
-                            }
-                        </div>
-                    })
-                }
+            <div className="d-flex justify-content-center">
+                <div className="chessBorder">
+                    {
+                        board.map((rowArray, rowIndex) => {
+                            return <div className="d-flex" key={rowIndex}>
+                                {
+                                    rowArray.map(([cellColor, hasQueen, showRed], colIndex) => {
+                                        return <div
+                                            onClick={() => clickBoardCell(rowIndex, colIndex)}
+                                            className={rowIndex === 0
+                                                ? `chessCellFirstRow ${cellColor}`
+                                                : `chessCell ${cellColor}`}
+                                            key={colIndex}
+                                            style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
+                                        >
+                                            {hasQueen ? <span className={showRed ? 'redQueen' : ''}>&#9813;</span> : ''}
+                                        </div>
+                                    })
+                                }
+                            </div>
+                        })
+                    }
+                </div>
             </div>
+
         </div>
     );
 }
