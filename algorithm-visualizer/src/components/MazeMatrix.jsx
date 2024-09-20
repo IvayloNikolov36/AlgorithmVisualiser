@@ -4,6 +4,7 @@ import { Cell } from '../models/cell';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
 import { StartCell, EndCell, PathCell, WallCell, EmptyCell } from '../constants/maze-constants';
 import '../App.css';
+import { ButtonGroup, Button } from 'react-bootstrap';
 
 const WaitSeconds = 0.15;
 const Size = 15;
@@ -228,15 +229,17 @@ export default function MazeMatrix() {
     }
 
     return (
-        <div className="container">
-            <div className="btnRow">
-                <button onClick={startBFS} className='primaryButton'>BFS</button>
-                <button onClick={refreshMaze} className='primaryButton'>Refresh Maze</button>
-                <button onClick={startDFS} className='primaryButton'>DFS</button>
+        <div className="container-fluid">
+            <div className="d-flex justify-content-center my-3">
+                <ButtonGroup>
+                    <Button onClick={startBFS} variant="outline-primary">BFS</Button>
+                    <Button onClick={refreshMaze} variant="outline-primary">Refresh Maze</Button>
+                    <Button onClick={startDFS} variant="outline-primary">DFS</Button>
+                </ButtonGroup>
             </div>
             {
                 matrix.map((row, rowIndex) => {
-                    return <div className="row" key={rowIndex}>
+                    return <div className="d-flex flex-row justify-content-center" key={rowIndex}>
                         {
                             row.map((cell, colIndex) => {
                                 return <div className={`maze-cell ${cell}`} key={colIndex}>
