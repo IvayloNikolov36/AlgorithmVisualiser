@@ -2,6 +2,7 @@ import { cloneDeep } from "lodash";
 import { useState } from "react";
 import { DiskEnum } from "../enums/disk.enum";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
+import { ButtonGroup, Button } from "react-bootstrap";
 
 const WaitInSeconds = 0.6;
 
@@ -41,9 +42,9 @@ export default function HanoiTower() {
             const index = source.indexOf(bottomDisk);
             source.splice(index, 1);
             await refreshPegs();
-            
+
             destination.unshift(bottomDisk);
-            await refreshPegs();                   
+            await refreshPegs();
         } else {
             let disk = bottomDisk - 1;
             await moveDisks(disk, source, aux, destination);
@@ -72,55 +73,53 @@ export default function HanoiTower() {
         return DiskEnum[diskValue];
     }
 
-    return (
-        <div className="container">
-            <div className="btnRow">
-                <button onClick={onStartMoving} disabled={isStartDisabled} className='primaryButton'>Move Disks To D</button>
-                <button onClick={reset} disabled={isResetDisabled} className='primaryButton'>Reset</button>
+    const getPegWithDisks = (pegDisks) => {
+        return <div className="d-flex flex-column justify-content-end align-items-center position-relative"
+        >
+            <div className="d-flex flex-column align-items-center position-absolute">
+                {
+                    pegDisks.map((diskValue, index) => {
+                        return <div
+                            className={`disk ${getDiskClass(diskValue)}`}
+                            key={`${diskValue}-${index}`}
+                        >
+                        </div>
+                    })
+                }
             </div>
-            <div className="pegsContainer">
-                <div className="pegCol">
-                    <div className="disksCol">
-                        {
-                            sourcePegDisks.map((diskValue, index) => {
-                                return <div className={`disk ${getDiskClass(diskValue)}`} key={`${diskValue}-${index}`}></div>
-                            })
-                        }
-                    </div>
-                    <div className="peg"></div>
-                </div>
-                <div className="pegCol">
-                    <div className="disksCol">
-                        {
-                            auxPegDisks.map((diskValue, index) => {
-                                return <div className={`disk ${getDiskClass(diskValue)}`} key={`${diskValue}_${index}`}></div>
-                            })
-                        }
-                    </div>
-                    <div className="peg"></div>
-                </div>
-                <div className="pegCol">
-                    <div className="disksCol">
-                        {
-                            destinationPegDisks.map((diskValue, index) => {
-                                return <div className={`disk ${getDiskClass(diskValue)}`} key={`${diskValue}:${index}`}></div>
-                            })
-                        }
-                    </div>
-                    <div className="peg"></div>
-                </div>
+            <div className="peg">
+            </div>
+        </div>
+    }
+
+    return (
+        <div className="container-fluid p-5">
+            <div className="d-flex justify-content-center mb-5">
+                <ButtonGroup>
+                    <Button
+                        onClick={onStartMoving}
+                        disabled={isStartDisabled}
+                        variant="outline-primary"
+                    >Move Disks To D
+                    </Button>
+                    <Button
+                        onClick={reset}
+                        disabled={isResetDisabled}
+                        variant="outline-primary"
+                    >Reset
+                    </Button>
+                </ButtonGroup>
+            </div>
+            <div className="d-flex justify-content-around pegsContainer">
+                {getPegWithDisks(sourcePegDisks)}
+                {getPegWithDisks(auxPegDisks)}
+                {getPegWithDisks(destinationPegDisks)}
             </div>
             <div className="pegsFundament"></div>
-            <div className="pegsSymbols">
-                <div className="col">
-                    <h1>S</h1>
-                </div>
-                <div className="col">
-                    <h1>A</h1>
-                </div>
-                <div className="col">
-                    <h1>D</h1>
-                </div>
+            <div className="d-flex flex-row justify-content-around">
+                <h1>S</h1>
+                <h1>A</h1>
+                <h1>D</h1>
             </div>
         </div>
     );

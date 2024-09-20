@@ -359,7 +359,7 @@ export default function SortingAlgorithms() {
             <div className="d-flex justify-content-around mx-3 my-2 pt-4">
                 {
                     cards.map((card, index) => {
-                        return <div className="d-flex col" key={index}>
+                        return <div className="d-flex-col" key={index}>
                             <div className="cardLabel">
                                 <span>{card.label}</span>
                             </div>
