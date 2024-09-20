@@ -3,11 +3,12 @@ import { useState } from "react";
 import { Card } from "../models/card";
 import { CardSuitEnum } from "../enums/card-suit.enum";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
-import { cloneDeep } from "lodash";
+import { cloneDeep, random } from "lodash";
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 const WaitInSeconds = 0.7;
+const CardsCount = 8;
 
 export default function SortingAlgorithms() {
 
@@ -15,17 +16,7 @@ export default function SortingAlgorithms() {
     const [isSorting, setIsSorting] = useState(false);
 
     useEffect(() => {
-        const initialCards = [
-            new Card(10, CardSuitEnum.Diamonds),
-            new Card(9, CardSuitEnum.Clubs),
-            new Card(4, CardSuitEnum.Hearts),
-            new Card(7, CardSuitEnum.Clubs),
-            new Card(8, CardSuitEnum.Diamonds),
-            new Card(10, CardSuitEnum.Hearts),
-            new Card(8, CardSuitEnum.Clubs),
-            new Card(7, CardSuitEnum.Diamonds)
-        ];
-
+        const initialCards = createCards();
         setCards(initialCards);
     }, [])
 
@@ -250,6 +241,34 @@ export default function SortingAlgorithms() {
         return firstCard > secondCard;
     }
 
+    const generateNewCards = () => {
+        setCards(createCards());
+    }
+
+    const createCards = () => {
+        const cards = [];
+
+        for (let i = 0; i < CardsCount; i++) {
+            const value = random(2, 10);
+            const suit = getCardSuit(random(1, 4));
+            const card = new Card(value, suit);
+
+            cards.push(card);
+        }
+
+        return cards;
+    }
+
+    const getCardSuit = (value) => {
+        switch (value) {
+            case 1: return CardSuitEnum.Clubs;
+            case 2: return CardSuitEnum.Diamonds;
+            case 3: return CardSuitEnum.Hearts;
+            case 4: return CardSuitEnum.Spades;
+            default: throw Error('Unhandled card suit.');
+        }
+    }
+
     const showCardsSwapArrows = async (firstCard, secondCard) => {
         firstCard.showRightSwapArrow = true;
         secondCard.showLeftSwapArrow = true;
@@ -266,6 +285,17 @@ export default function SortingAlgorithms() {
 
     return (
         <div className="container-fluid">
+            <div className="d-flex justify-content-center py-2">
+                <ButtonGroup>
+                    <Button
+                        onClick={generateNewCards}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Generate New
+                    </Button>
+                </ButtonGroup>
+            </div>
             <div className="d-flex justify-content-center py-2">
                 <ButtonGroup>
                     <Button
@@ -298,7 +328,6 @@ export default function SortingAlgorithms() {
                     </Button>
                 </ButtonGroup>
             </div>
-
             <div className="d-flex justify-content-around mx-3 my-2 pt-4">
                 {
                     cards.map((card, index) => {
