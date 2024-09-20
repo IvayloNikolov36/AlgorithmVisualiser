@@ -202,11 +202,8 @@
 /* --- Sorting ---*/
 
 .card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 6.563rem;
-  height: 10.938rem;
+  width: 6.725rem !important;
+  height: 10.325rem !important;
   border: solid 0.125rem;
   border-radius: 0.75rem;
   border-color: gray;
@@ -215,27 +212,19 @@
 }
 
 .cardLabel {
-  height: 1.875rem;
+  width: 6.725rem !important;
+  height: 2.275rem !important;
   font-size: larger;
   color: #0D6EFD;
   text-align: center;
 }
 
 .grayOutCard {
-  background-color: rgba(169, 169, 169, 0.400);
+  background-color: rgba(169, 169, 169, 0.400) !important;
 }
 
 .selectedCard {
-  border-color: #0D6EFD;
-}
-
-.cards-container {
-  width: 95%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  margin: 1.5rem;
-  padding-bottom: 1.25rem;
+  border-color: #0D6EFD !important;
 }
 
 .cardSymbol {

@@ -4,12 +4,15 @@ import { Card } from "../models/card";
 import { CardSuitEnum } from "../enums/card-suit.enum";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
 import { cloneDeep } from "lodash";
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 const WaitInSeconds = 0.7;
 
 export default function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
+    const [isSorting, setIsSorting] = useState(false);
 
     useEffect(() => {
         const initialCards = [
@@ -79,6 +82,7 @@ export default function SortingAlgorithms() {
     }
 
     const startBubbleSort = async () => {
+        setIsSorting(true);
 
         let cardsTraverseCount = 0;
         let firstIndex = 0;
@@ -155,7 +159,6 @@ export default function SortingAlgorithms() {
         let iteration = 0;
 
         while (iteration < cards.length - 1) {
-
             const initialMinValueIndex = iteration;
             let minValueIndex = initialMinValueIndex;
             let minValue = cards[minValueIndex].value;
@@ -170,7 +173,7 @@ export default function SortingAlgorithms() {
                 if (currentValue < minValue) {
                     minValue = currentValue;
                     cards[minValueIndex].label = '';
-                    minValueIndex = index; 
+                    minValueIndex = index;
                     cards[minValueIndex].label = 'Min';
                 }
 
@@ -255,35 +258,59 @@ export default function SortingAlgorithms() {
     }
 
     const getCardDetailsRow = (card) => {
-        return <>
+        return <div className="d-flex">
             <span className="cardValue" style={{ color: card.color }}>{card.value}</span>
             <span className="cardSymbol" style={{ color: card.color }} dangerouslySetInnerHTML={{ __html: card.suit }}></span>
-        </>
+        </div>
     }
 
     return (
-        <div className="container">
-            <div className="btnRow">
-                <button onClick={startBubbleSort} className='primaryButton'>Bubble Sort</button>
-                <button onClick={startQuickSort} className='primaryButton'>Quick Sort</button>
-                <button onClick={startInsertionSort} className='primaryButton'>Insertion Sort</button>
-                <button onClick={startSelectionSort} className='primaryButton'>Selection Sort</button>
+        <div className="container-fluid">
+            <div className="d-flex justify-content-center py-2">
+                <ButtonGroup>
+                    <Button
+                        onClick={startBubbleSort}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Bubble Sort
+                    </Button>
+                    <Button
+                        onClick={startQuickSort}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Quick Sort
+                    </Button>
+                    <Button
+                        onClick={startInsertionSort}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Insertion Sort
+                    </Button>
+                    <Button
+                        onClick={startSelectionSort}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Selection Sort
+                    </Button>
+                </ButtonGroup>
             </div>
-            <div className="cards-container">
 
+            <div className="d-flex justify-content-around mx-3 my-2 pt-4">
                 {
                     cards.map((card, index) => {
-                        return <div className="col">
+                        return <div className="d-flex col" key={index}>
                             <div className="cardLabel">
                                 <span>{card.label}</span>
                             </div>
                             <div
-                                className={`card ${card.grayOut ? 'grayOutCard' : ''} ${card.selected ? 'selectedCard' : ''}`}
+                                className={`card ${card.grayOut ? 'grayOutCard' : ''} ${card.selected ? 'selectedCard' : ''} justify-content-between`}
                                 key={index}
                             >
-                                <div className="row">
-                                    {getCardDetailsRow(card)}
-                                </div>
+                                {getCardDetailsRow(card)}
                                 {
                                     (card.showLeftSwapArrow || card.showRightSwapArrow) &&
                                     <div className={card.showLeftSwapArrow ? 'arrow-left' : 'arrow-right'}>
@@ -292,14 +319,13 @@ export default function SortingAlgorithms() {
                                         <span></span>
                                     </div>
                                 }
-                                <div className="row verticalFlip">
+                                <div className="verticalFlip">
                                     {getCardDetailsRow(card)}
                                 </div>
                             </div>
                         </div>
                     })
                 }
-
             </div>
         </div>
     );
