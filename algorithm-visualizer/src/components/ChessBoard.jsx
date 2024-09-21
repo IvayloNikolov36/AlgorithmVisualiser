@@ -8,7 +8,7 @@ const BoardRows = 8;
 const BoardCols = 8;
 const WaitInSeconds = 0.5;
 
-export default function ChessBoard() {
+export function ChessBoard() {
 
     const [board, setBoard] = useState([]);
     const placedQueens = useRef([]);

@@ -10,7 +10,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 const WaitInSeconds = 0.7;
 const CardsCount = 8;
 
-export default function SortingAlgorithms() {
+export function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
     const [unsortedCards, setUnsortedCards] = useState([]);

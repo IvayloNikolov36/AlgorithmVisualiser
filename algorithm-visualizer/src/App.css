@@ -6,6 +6,22 @@
   position: absolute;
 }
 
+/* --- Header --*/
+
+.header {
+  background-color: #0D6EFD;
+  opacity: 75%;
+  height: 2.65rem;
+  border-bottom-left-radius: 0.938rem;
+  border-bottom-right-radius: 0.938rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: white;
+  margin-right: 1.25rem;
+}
+
 /* --- Maze --- */
 
 .maze-cell {

@@ -6,7 +6,7 @@ import { ButtonGroup, Button } from "react-bootstrap";
 
 const WaitInSeconds = 0.6;
 
-export default function HanoiTower() {
+export function HanoiTower() {
 
     const [sourcePegDisks, setSourcePegDisks] = useState([]);
     const [auxPegDisks, setAuxPegDisks] = useState([]);

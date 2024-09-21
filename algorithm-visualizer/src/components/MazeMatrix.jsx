@@ -9,7 +9,7 @@ import { ButtonGroup, Button } from 'react-bootstrap';
 const WaitSeconds = 0.15;
 const Size = 15;
 
-export default function MazeMatrix() {
+export function MazeMatrix() {
 
     const [matrix, setMatrix] = useState([]);
     const isEndReached = useRef(false);

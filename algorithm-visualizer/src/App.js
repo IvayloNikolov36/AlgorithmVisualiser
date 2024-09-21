@@ -1,15 +1,20 @@
 import './App.css';
-import SortingAlgorithms from './components/SortingAlgorithms';
-//import ChessBoard from './components/ChessBoard';
-//import HanoiTower from './components/HanoiTower';
-// import MazeMatrix from './components/MazeMatrix';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { ChessBoard, HanoiTower, Header, MazeMatrix, SortingAlgorithms } from './components';
+import { Routes as routes } from './enums/routes';
 
 function App() {
   return (
-    //<MazeMatrix />
-    //<ChessBoard/>
-    // <HanoiTower/>
-    <SortingAlgorithms />
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" exact element={<MazeMatrix />} />
+          <Route path={routes.PathFinding} element={<MazeMatrix />} />
+          <Route path={routes.EightQueens} element={<ChessBoard />} />
+          <Route path={routes.TowerOfHanoi} element={<HanoiTower />} />
+          <Route path={routes.Sorting} element={<SortingAlgorithms />} />
+        </Routes>
+      </Router>
   );
 }
 
