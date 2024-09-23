@@ -9,6 +9,8 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 const WaitInSeconds = 0.7;
 const CardsCount = 8;
+const SwapLabel = 'swap';
+const EmptyLabel = '';
 
 export function SortingAlgorithms() {
 
@@ -65,6 +67,7 @@ export function SortingAlgorithms() {
 
         const sortedIndex = storeIndex - 1;
         await swap(cards, startIndex, sortedIndex);
+        await setTimeOutAfter(WaitInSeconds);
         cards[sortedIndex].grayOut = true;
 
         await updateCards();
@@ -82,41 +85,73 @@ export function SortingAlgorithms() {
         setIsSorting(true);
 
         let cardsTraverseCount = 0;
+        let hasSwap = false;
+
         let firstIndex = 0;
         let secondIndex = 1;
-        let hasSwap = false;
+        let lastUnsortedIndex = cards.length - 1;
 
         while (true) {
 
-            if (secondIndex >= cards.length) {
+            if (secondIndex > lastUnsortedIndex) {
 
                 if (cardsTraverseCount > 0 && !hasSwap) {
-                    cards.forEach(card => card.grayOut = false);
+                    setGrayOutFlag(cards, false);
                     setCards(cloneDeep(cards));
+                    await setTimeOutAfter(WaitInSeconds);
                     break;
                 }
 
-                cards[cards.length - 1 - cardsTraverseCount].grayOut = true;
+                setGrayOutFlag([cards[lastUnsortedIndex]], true);
                 await setTimeOutAfter(WaitInSeconds);
+                          
                 firstIndex = 0;
                 secondIndex = 1;
                 cardsTraverseCount++;
+                lastUnsortedIndex--;
                 hasSwap = false;
             }
 
             const firstCard = cards[firstIndex];
             const secondCard = cards[secondIndex];
 
+            setSelected([firstCard, secondCard], true);
+            setLabel([firstCard], 'first');
+            setLabel([secondCard], 'second');
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
+
             if (isGreaterThan(firstCard.value, secondCard.value)) {
+                setLabel([firstCard, secondCard], SwapLabel);
+
                 await swap(cards, firstIndex, secondIndex);
                 hasSwap = true;
+
+                await setTimeOutAfter(WaitInSeconds);                
+            }
+
+            if (firstIndex === 0 && secondIndex === lastUnsortedIndex) {
+                setGrayOutFlag([firstCard, secondCard], true);                
+                await clearCardsSelectionsAndLabels([firstCard, secondCard]);
+                setGrayOutFlag(cards, false);
+                setCards(cloneDeep(cards));
+                break;
             }
 
             firstIndex++;
             secondIndex++;
+
+            await clearCardsSelectionsAndLabels([firstCard, secondCard]);
         }
 
         setIsSorting(false);
+    }
+
+    const clearCardsSelectionsAndLabels = async (cardsArr) => {
+        setSelected(cardsArr, false);
+        setLabel(cardsArr, EmptyLabel);
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
     }
 
     const startInsertionSort = async () => {
@@ -187,6 +222,7 @@ export function SortingAlgorithms() {
             if (initialMinValueIndex !== minValueIndex) {
                 cards[minValueIndex].label = '';
                 await swap(cards, initialMinValueIndex, minValueIndex);
+                await setTimeOutAfter(WaitInSeconds);
             }
 
             await setCardSorted(cards, initialMinValueIndex);
@@ -199,6 +235,18 @@ export function SortingAlgorithms() {
         await clearSortedFlag(cards);
 
         setIsSorting(false);
+    }
+
+    const setLabel = (cards, label) => {
+        cards.forEach(card => card.label = label);
+    }
+  
+    const setGrayOutFlag = (cards, isGrayedOut) => {
+        cards.forEach(card => card.grayOut = isGrayedOut);
+    }
+
+    const setSelected = (cards, isSelected) => {
+        cards.forEach(card => card.selected = isSelected);
     }
 
     const setCardSelected = async (cards, cardIndex) => {
@@ -249,7 +297,6 @@ export function SortingAlgorithms() {
         cards[toIndex].showRightSwapArrow = false;
 
         setCards(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
     }
 
     const isGreaterThan = (firstCard, secondCard) => {
