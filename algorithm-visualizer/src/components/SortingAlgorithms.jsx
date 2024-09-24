@@ -10,6 +10,8 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 const WaitInSeconds = 0.7;
 const CardsCount = 8;
 const SwapLabel = 'swap';
+const MinLabel = 'Min';
+const InitialMinLabel = 'Initial Min';
 const EmptyLabel = '';
 
 export function SortingAlgorithms() {
@@ -97,8 +99,6 @@ export function SortingAlgorithms() {
         await setTimeOutAfter(WaitInSeconds);
 
         await swap(cards, startIndex, sortedIndex);
-
-
 
         await setTimeOutAfter(WaitInSeconds);
 
@@ -237,7 +237,7 @@ export function SortingAlgorithms() {
             let minValueIndex = initialMinValueIndex;
             let minValue = cards[minValueIndex].value;
 
-            cards[minValueIndex].label = 'Min';
+            setLabel([cards[minValueIndex]], MinLabel);
             await updateCards();
 
             for (let index = iteration + 1; index < cards.length; index++) {
@@ -246,27 +246,32 @@ export function SortingAlgorithms() {
                 const currentValue = cards[index].value;
                 if (currentValue < minValue) {
                     minValue = currentValue;
-                    cards[minValueIndex].label = '';
+                    setLabel([cards[minValueIndex]], EmptyLabel);
+                    setLabel([cards[iteration]], InitialMinLabel);
                     minValueIndex = index;
-                    cards[minValueIndex].label = 'Min';
+                    setLabel([cards[minValueIndex]], MinLabel);
                 }
 
                 await clearCardSelected(cards, index);
             }
 
             if (initialMinValueIndex !== minValueIndex) {
-                cards[minValueIndex].label = '';
+                setLabel([cards[minValueIndex]], EmptyLabel);
+                setLabel([cards[initialMinValueIndex], cards[minValueIndex]], SwapLabel);
                 await swap(cards, initialMinValueIndex, minValueIndex);
+                setLabel([cards[initialMinValueIndex], cards[minValueIndex]], EmptyLabel);
                 await setTimeOutAfter(WaitInSeconds);
+            } else {
+                setLabel([cards[initialMinValueIndex]], EmptyLabel);
             }
 
-            await setCardSorted(cards, initialMinValueIndex);
+            await setCardSorted(cards[initialMinValueIndex]);
 
             iteration++;
         }
 
         clearCardLabels(cards);
-        await setCardSorted(cards, cards.length - 1);
+        await setCardSorted(cards[cards.length - 1]);
         await clearSortedFlag(cards);
 
         setIsSorting(false);
@@ -299,8 +304,8 @@ export function SortingAlgorithms() {
         setCards(cards);
     }
 
-    const setCardSorted = async (cards, cardIndex) => {
-        cards[cardIndex].grayOut = true;
+    const setCardSorted = async (card, cardIndex) => {
+        card.grayOut = true;
         await updateCards();
     }
 
