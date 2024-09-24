@@ -17,6 +17,7 @@ export function SortingAlgorithms() {
     const [cards, setCards] = useState([]);
     const [unsortedCards, setUnsortedCards] = useState([]);
     const [isSorting, setIsSorting] = useState(false);
+    const [sortingInfo, setSortingInfo] = useState('');
 
     useEffect(() => {
         const initialCards = createCards();
@@ -32,19 +33,21 @@ export function SortingAlgorithms() {
 
         await quickSortSortPartition(startIndex, endIndex);
 
-        cards.forEach(card => card.grayOut = false);
+        setGrayOutFlag(cards, false);
+        setSortingInfo('');
         setCards(cloneDeep(cards));
 
         setIsSorting(false);
     }
 
     const quickSortSortPartition = async (startIndex, endIndex) => {
+
         if (startIndex > endIndex) {
             return;
         }
 
         if (startIndex === endIndex) {
-            cards[startIndex].grayOut = true;
+            setGrayOutFlag([cards[startIndex]], true);
             await updateCards();
             return;
         }
@@ -52,23 +55,55 @@ export function SortingAlgorithms() {
         const pivotValue = cards[startIndex].value;
         let storeIndex = startIndex + 1;
 
-        for (let i = startIndex + 1; i <= endIndex; i++) {
-            const currentValue = cards[i].value;
+        setLabel([cards[startIndex]], 'Pivot');
+        setSortingInfo(`Store Index: ${storeIndex}`);
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
+
+        for (let currentCardIndex = startIndex + 1; currentCardIndex <= endIndex; currentCardIndex++) {
+            const currentValue = cards[currentCardIndex].value;
+
+            setSelected([cards[currentCardIndex]], true);
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
 
             if (currentValue <= pivotValue) {
-                if (i !== storeIndex) {
-                    await swap(cards, storeIndex, i);
+                if (currentCardIndex !== storeIndex) {
+
+                    setSelected([cards[currentCardIndex]], false);
+                    setLabel([cards[storeIndex], cards[currentCardIndex]], SwapLabel);
                     setCards(cloneDeep(cards));
+
+                    await swap(cards, storeIndex, currentCardIndex);
+
                     await setTimeOutAfter(WaitInSeconds);
                 }
+
                 storeIndex++;
+                setSortingInfo(`Store Index: ${storeIndex}`);
+                setSelected([cards[currentCardIndex]], false);
+                setCards(cloneDeep(cards));
             }
+
+            setSelected([cards[currentCardIndex]], false);
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
         }
 
         const sortedIndex = storeIndex - 1;
-        await swap(cards, startIndex, sortedIndex);
+
+        setLabel([cards[startIndex]], 'Pivot Swap');
+        setLabel([cards[sortedIndex]], 'Store Index - 1 Swap');
         await setTimeOutAfter(WaitInSeconds);
-        cards[sortedIndex].grayOut = true;
+
+        await swap(cards, startIndex, sortedIndex);
+
+
+
+        await setTimeOutAfter(WaitInSeconds);
+
+        setGrayOutFlag([cards[sortedIndex]], true);
+        setLabel([cards[sortedIndex]], EmptyLabel);
 
         await updateCards();
 
@@ -104,7 +139,7 @@ export function SortingAlgorithms() {
 
                 setGrayOutFlag([cards[lastUnsortedIndex]], true);
                 await setTimeOutAfter(WaitInSeconds);
-                          
+
                 firstIndex = 0;
                 secondIndex = 1;
                 cardsTraverseCount++;
@@ -127,11 +162,11 @@ export function SortingAlgorithms() {
                 await swap(cards, firstIndex, secondIndex);
                 hasSwap = true;
 
-                await setTimeOutAfter(WaitInSeconds);                
+                await setTimeOutAfter(WaitInSeconds);
             }
 
             if (firstIndex === 0 && secondIndex === lastUnsortedIndex) {
-                setGrayOutFlag([firstCard, secondCard], true);                
+                setGrayOutFlag([firstCard, secondCard], true);
                 await clearCardsSelectionsAndLabels([firstCard, secondCard]);
                 setGrayOutFlag(cards, false);
                 setCards(cloneDeep(cards));
@@ -240,7 +275,7 @@ export function SortingAlgorithms() {
     const setLabel = (cards, label) => {
         cards.forEach(card => card.label = label);
     }
-  
+
     const setGrayOutFlag = (cards, isGrayedOut) => {
         cards.forEach(card => card.grayOut = isGrayedOut);
     }
@@ -295,6 +330,7 @@ export function SortingAlgorithms() {
 
         cards[fromIndex].showLeftSwapArrow = false;
         cards[toIndex].showRightSwapArrow = false;
+        setLabel([cards[fromIndex], cards[toIndex]], EmptyLabel);
 
         setCards(cloneDeep(cards));
     }
@@ -403,13 +439,18 @@ export function SortingAlgorithms() {
                     </Button>
                 </ButtonGroup>
             </div>
-            <div className="d-flex justify-content-around mx-3 my-2 pt-4">
+            <div className="d-flex justify-content-center mx-5 mt-2 cards-info">
+                <span className="text-info fs-4">{sortingInfo}</span>
+            </div>
+            <div className="d-flex justify-content-around mx-3 my-1 pt-1">
                 {
                     cards.map((card, index) => {
-                        return <div className="d-flex-col" key={index}>
-                            <div className="cardLabel">
+                        return <div className="d-flex-col" key={index}
+                        >
+                            <div className="d-flex align-items-end card-label text-start">
                                 <span>{card.label}</span>
                             </div>
+
                             <div
                                 className={`card ${card.grayOut ? 'grayOutCard' : ''} ${card.selected ? 'selectedCard' : ''} justify-content-between`}
                                 key={index}
@@ -427,10 +468,15 @@ export function SortingAlgorithms() {
                                     {getCardDetailsRow(card)}
                                 </div>
                             </div>
+
+                            <div className="d-flex align-items-end text-start mt-3 ms-1">
+                                <span className="text-info fs-5">{index}</span>
+                            </div>
                         </div>
                     })
                 }
             </div>
+
         </div>
     );
 }

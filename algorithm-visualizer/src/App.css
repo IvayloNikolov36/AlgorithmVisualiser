@@ -164,12 +164,15 @@
   padding: 0.2rem;
 }
 
-.cardLabel {
-  width: 6.725rem !important;
-  height: 2.275rem !important;
+.card-label {
+  width: 8rem !important;
+  height: 3.7rem !important;
   font-size: larger;
   color: #0D6EFD;
-  text-align: center;
+}
+
+.cards-info {
+  height: 2.25rem;
 }
 
 .grayOutCard {
