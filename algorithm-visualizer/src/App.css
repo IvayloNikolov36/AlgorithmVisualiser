@@ -25,8 +25,8 @@
 /* --- Maze --- */
 
 .maze-cell {
-  width: 1.875rem;
-  height: 1.875rem;
+  width: 2.2rem;
+  height: 2.2rem;
   border: solid 0.100rem;
   border-color: rgb(175, 171, 171);
 }
@@ -55,8 +55,8 @@
 
 .chessCell,
 .chessCellFirstRow {
-  width: 3.65rem !important;
-  height: 3.65rem !important;
+  width: 3.95rem !important;
+  height: 3.95rem !important;
   font-size: 3rem;
   text-align: center;
 }
@@ -66,7 +66,7 @@
 }
 
 .blackCell {
-  background-color: rgb(32, 9, 9);
+  background-color: rgb(41, 7, 7);
 }
 
 .redQueen {
@@ -76,7 +76,7 @@
 .chessBorder {
   border-width: 0.750rem;
   border-style: solid;
-  border-color: rgb(56, 15, 15);
+  border-color: rgb(24, 4, 4);
 }
 
 .chessCellFirstRow:hover {

@@ -7,7 +7,8 @@ import '../App.css';
 import { ButtonGroup, Button } from 'react-bootstrap';
 
 const WaitSeconds = 0.15;
-const Size = 15;
+const WidthSize = 21;
+const HeightSize = 15;
 
 export function MazeMatrix() {
 
@@ -19,7 +20,7 @@ export function MazeMatrix() {
     }, []);
 
     const refreshMaze = () => {
-        setMatrix(cloneDeep(generateMaze(Size, Size)));
+        setMatrix(cloneDeep(generateMaze(HeightSize, WidthSize)));
     }
 
     const generateMaze = (rows, cols) => {

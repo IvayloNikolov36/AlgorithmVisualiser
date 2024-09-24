@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { BlackCell, WhiteCell } from "../constants/board-constants";
 import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
-import { ButtonGroup, Button } from "react-bootstrap";
+import { ButtonGroup, Button, ToggleButton } from "react-bootstrap";
 
 const BoardRows = 8;
 const BoardCols = 8;
@@ -16,16 +16,13 @@ export function ChessBoard() {
     const attackedVerticals = useRef([]);
     const attackedLeftDiagonals = useRef([]);
     const attackedRightDiagonals = useRef([]);
-    const demonstration = useRef(false);
+    const [animateAlgorithm, setAnimateAlgorithm] = useState(false);
+    const [isPlacingQueens, setIsPlacingQueeens] = useState(false);
 
     useEffect(() => {
         const board = generateBoard();
         setBoard(board);
     }, []);
-
-    const toggleShowAlgorithm = () => {
-        demonstration.current = !demonstration.current;
-    }
 
     const generateBoard = () => {
         const board = [];
@@ -51,7 +48,9 @@ export function ChessBoard() {
     }
 
     const placeQueens = async () => {
+        setIsPlacingQueeens(true);
         await tryPlaceQueen(0, 0);
+        setIsPlacingQueeens(false);
     }
 
     const tryPlaceQueen = async (row, col) => {
@@ -115,7 +114,7 @@ export function ChessBoard() {
         setBoard(cloneDeep(board));
         placedQueens.current.push([row, col]);
         setAttackedPaths(placedQueens.current);
-        if (demonstration.current) {
+        if (animateAlgorithm) {
             await setTimeOutAfter(WaitInSeconds);
         }
     }
@@ -123,7 +122,7 @@ export function ChessBoard() {
     const unMarkQueen = async (queenRow, queenCol) => {
         const cellValue = board[queenRow][queenCol];
 
-        if (demonstration.current) {
+        if (animateAlgorithm) {
             board[queenRow][queenCol] = [cellValue[0], true, true];
             setBoard(cloneDeep(board));
             await setTimeOutAfter(WaitInSeconds);
@@ -142,7 +141,9 @@ export function ChessBoard() {
             resetBoard();
         }
 
+        setIsPlacingQueeens(true);
         await tryPlaceQueen(row, col);
+        setIsPlacingQueeens(false);
     }
 
     const resetBoard = () => {
@@ -213,11 +214,21 @@ export function ChessBoard() {
         <div className="container">
             <div className="d-flex justify-content-center py-2">
                 <ButtonGroup>
-                    <Button onClick={placeQueens} variant="outline-primary">Place Queens</Button>
-                    <Button onClick={toggleShowAlgorithm} variant="outline-primary">Animate</Button>
+                    <Button onClick={placeQueens} disabled={isPlacingQueens} variant="outline-primary">
+                        Place Queens
+                    </Button>
+                    <ToggleButton
+                        id="toggle-check"
+                        type="checkbox"
+                        variant="outline-primary"
+                        checked={animateAlgorithm}
+                        value="1"
+                        onChange={(e) => setAnimateAlgorithm(e.currentTarget.checked)}
+                    >Animate
+                    </ToggleButton>
                 </ButtonGroup>
             </div>
-            <div className="d-flex justify-content-center">
+            <div className="d-flex justify-content-center mt-3">
                 <div className="chessBorder">
                     {
                         board.map((rowArray, rowIndex) => {
@@ -241,7 +252,6 @@ export function ChessBoard() {
                     }
                 </div>
             </div>
-
         </div>
     );
 }
