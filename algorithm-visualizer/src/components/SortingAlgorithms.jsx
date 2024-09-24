@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useState } from "react";
 import { Card } from "../models/card";
 import { CardSuitEnum } from "../enums/card-suit.enum";
@@ -17,15 +17,29 @@ const EmptyLabel = '';
 export function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
+    const [cardsField, setCardsField] = useState([]);
     const [unsortedCards, setUnsortedCards] = useState([]);
     const [isSorting, setIsSorting] = useState(false);
     const [sortingInfo, setSortingInfo] = useState('');
+    const [showCardsField, setShowCardsField] = useState(false);
+    const nullCard = useRef(new Card(null, null));
 
     useEffect(() => {
         const initialCards = createCards();
         setUnsortedCards(cloneDeep(initialCards));
         setCards(initialCards);
+        setCardsField(createCardsField());
     }, [])
+
+    const createCardsField = () => {
+        const cardsField = [];
+
+        for (let i = 0; i < CardsCount; i++) {
+            cardsField.push(nullCard.current);
+        }
+
+        return cardsField;
+    }
 
     const startQuickSort = async () => {
         setIsSorting(true);
@@ -111,11 +125,6 @@ export function SortingAlgorithms() {
         await quickSortSortPartition(sortedIndex + 1, endIndex);
     }
 
-    const updateCards = async () => {
-        setCards(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
-    }
-
     const startBubbleSort = async () => {
         setIsSorting(true);
 
@@ -191,10 +200,15 @@ export function SortingAlgorithms() {
 
     const startInsertionSort = async () => {
         setIsSorting(true);
+        setShowCardsField(true);
+        await setTimeOutAfter(WaitInSeconds);
 
         let index = 1;
 
         while (index < cards.length) {
+
+            setGrayOutFlag([cards[index - 1]], true);
+            await updateCards();
 
             const currentValue = cards[index].value;
             const previousValue = cards[index - 1].value;
@@ -202,8 +216,12 @@ export function SortingAlgorithms() {
             if (currentValue < previousValue) {
 
                 const extracted = cards[index];
-                // TODO: create a new div to hold the extracted card
-                cards[index] = new Card(null, null);
+                cards[index] = nullCard.current;
+                await updateCards();
+
+                cardsField[index] = extracted;
+                setCardsField(cloneDeep(cardsField));
+                await setTimeOutAfter(WaitInSeconds);
 
                 await moveForward(cards, index - 1);
 
@@ -212,6 +230,10 @@ export function SortingAlgorithms() {
                 while (insertIndex >= 0) {
                     if (insertIndex === 0 || extracted.value >= cards[insertIndex - 1].value) {
                         cards[insertIndex] = extracted;
+                        setGrayOutFlag([cards[insertIndex]], true);
+
+                        cardsField[index] = nullCard.current;
+                        setCardsField(cloneDeep(cardsField));
                         await updateCards();
                         break;
                     }
@@ -223,8 +245,10 @@ export function SortingAlgorithms() {
             index++;
         }
 
+        setGrayOutFlag(cards, false);
         await updateCards();
         setIsSorting(false);
+        setShowCardsField(false);
     }
 
     const startSelectionSort = async () => {
@@ -275,6 +299,11 @@ export function SortingAlgorithms() {
         await clearSortedFlag(cards);
 
         setIsSorting(false);
+    }
+
+    const updateCards = async () => {
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
     }
 
     const setLabel = (cards, label) => {
@@ -385,16 +414,43 @@ export function SortingAlgorithms() {
         await setTimeOutAfter(WaitInSeconds);
     }
 
+    const getCardStructure = (card, index, showArrows = false) => {
+        return <div
+            className={`card ${card?.grayOut ? 'grayOutCard' : ''} ${card?.selected ? 'selectedCard' : ''} justify-content-between`}
+            key={index}
+        >
+            {getCardDetailsRow(card)}
+
+            {
+                showArrows
+                && (card.showLeftSwapArrow || card.showRightSwapArrow)
+                && getCardArrowsStructure(card.showLeftSwapArrow)
+            }
+
+            <div className="verticalFlip">
+                {getCardDetailsRow(card)}
+            </div>
+        </div>
+    }
+
+    const getCardArrowsStructure = (showLeftArrow) => {
+        return <div className={showLeftArrow ? 'arrow-left' : 'arrow-right'}>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    }
+
     const getCardDetailsRow = (card) => {
         return <div className="d-flex">
-            <span className="cardValue" style={{ color: card.color }}>{card.value}</span>
-            <span className="cardSymbol" style={{ color: card.color }} dangerouslySetInnerHTML={{ __html: card.suit }}></span>
+            <span className="cardValue" style={{ color: card?.color }}>{card?.value}</span>
+            <span className="cardSymbol" style={{ color: card?.color }} dangerouslySetInnerHTML={{ __html: card?.suit }}></span>
         </div>
     }
 
     return (
         <div className="container-fluid">
-            <div className="d-flex justify-content-center py-2">
+            <div className="d-flex justify-content-around px-3 py-2">
                 <ButtonGroup>
                     <Button
                         onClick={generateNewCards}
@@ -411,8 +467,7 @@ export function SortingAlgorithms() {
                         Reset
                     </Button>
                 </ButtonGroup>
-            </div>
-            <div className="d-flex justify-content-center py-2">
+
                 <ButtonGroup>
                     <Button
                         onClick={startBubbleSort}
@@ -450,29 +505,15 @@ export function SortingAlgorithms() {
             <div className="d-flex justify-content-around mx-3 my-1 pt-1">
                 {
                     cards.map((card, index) => {
-                        return <div className="d-flex-col" key={index}
+                        return <div
+                            className="d-flex-col"
+                            key={index}
                         >
                             <div className="d-flex align-items-end card-label text-start">
                                 <span>{card.label}</span>
                             </div>
 
-                            <div
-                                className={`card ${card.grayOut ? 'grayOutCard' : ''} ${card.selected ? 'selectedCard' : ''} justify-content-between`}
-                                key={index}
-                            >
-                                {getCardDetailsRow(card)}
-                                {
-                                    (card.showLeftSwapArrow || card.showRightSwapArrow) &&
-                                    <div className={card.showLeftSwapArrow ? 'arrow-left' : 'arrow-right'}>
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                    </div>
-                                }
-                                <div className="verticalFlip">
-                                    {getCardDetailsRow(card)}
-                                </div>
-                            </div>
+                            {getCardStructure(card, index, true)}
 
                             <div className="d-flex align-items-end text-start mt-3 ms-1">
                                 <span className="text-info fs-5">{index}</span>
@@ -481,7 +522,18 @@ export function SortingAlgorithms() {
                     })
                 }
             </div>
-
+            {
+                showCardsField &&
+                <div className="d-flex justify-content-around mx-3 my-1 pt-1">
+                    {
+                        cardsField.map((card, index) => {
+                            return <div className="d-flex-col">
+                                {getCardStructure(card, index, false)}
+                            </div>
+                        })
+                    }
+                </div>
+            }
         </div>
     );
 }
