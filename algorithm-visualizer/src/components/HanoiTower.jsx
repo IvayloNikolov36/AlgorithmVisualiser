@@ -93,14 +93,14 @@ export function HanoiTower() {
     }
 
     return (
-        <div className="container-fluid p-5">
+        <div className="container-fluid px-5 py-4">
             <div className="d-flex justify-content-center mb-5">
                 <ButtonGroup>
                     <Button
                         onClick={onStartMoving}
                         disabled={isStartDisabled}
                         variant="outline-primary"
-                    >Move Disks To D
+                    >Move disks to Peg 'D'
                     </Button>
                     <Button
                         onClick={reset}
@@ -117,9 +117,9 @@ export function HanoiTower() {
             </div>
             <div className="pegsFundament"></div>
             <div className="d-flex flex-row justify-content-around">
-                <h1>S</h1>
-                <h1>A</h1>
-                <h1>D</h1>
+                <span className="fs-1 fw-bold">S</span>
+                <span className="fs-1 fw-bold">A</span>
+                <span className="fs-1 fw-bold">D</span>
             </div>
         </div>
     );
