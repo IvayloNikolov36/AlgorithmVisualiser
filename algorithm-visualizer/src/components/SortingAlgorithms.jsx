@@ -13,6 +13,9 @@ const SwapLabel = 'swap';
 const MinLabel = 'Min';
 const InitialMinLabel = 'Initial Min';
 const EmptyLabel = '';
+const CardAttributelabel = 'label';
+const CardAttributeSelected = 'selected';
+const CardAttributeSorted = 'grayOut';
 
 export function SortingAlgorithms() {
 
@@ -50,7 +53,7 @@ export function SortingAlgorithms() {
 
         await quickSortSortPartition(startIndex, endIndex);
 
-        setGrayOutFlag(cards, false);
+        setAttribute(cards, CardAttributeSorted, false);
         setSortingInfo('');
         setCards(cloneDeep(cards));
 
@@ -64,15 +67,16 @@ export function SortingAlgorithms() {
         }
 
         if (startIndex === endIndex) {
-            setGrayOutFlag([cards[startIndex]], true);
-            await updateCards();
+            setAttribute([cards[startIndex]], CardAttributeSorted, true);
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
             return;
         }
 
         const pivotValue = cards[startIndex].value;
         let storeIndex = startIndex + 1;
 
-        setLabel([cards[startIndex]], 'Pivot');
+        setAttribute([cards[startIndex]], CardAttributelabel, 'Pivot');
         setSortingInfo(`Store Index: ${storeIndex}`);
         setCards(cloneDeep(cards));
         await setTimeOutAfter(WaitInSeconds);
@@ -80,15 +84,15 @@ export function SortingAlgorithms() {
         for (let currentCardIndex = startIndex + 1; currentCardIndex <= endIndex; currentCardIndex++) {
             const currentValue = cards[currentCardIndex].value;
 
-            setSelected([cards[currentCardIndex]], true);
+            setAttribute([cards[currentCardIndex]], CardAttributeSelected, true);
             setCards(cloneDeep(cards));
             await setTimeOutAfter(WaitInSeconds);
 
             if (currentValue <= pivotValue) {
                 if (currentCardIndex !== storeIndex) {
 
-                    setSelected([cards[currentCardIndex]], false);
-                    setLabel([cards[storeIndex], cards[currentCardIndex]], SwapLabel);
+                    setAttribute([cards[currentCardIndex]], CardAttributeSelected, false);
+                    setAttribute([cards[storeIndex], cards[currentCardIndex]], CardAttributelabel, SwapLabel);
                     setCards(cloneDeep(cards));
 
                     await swap(cards, storeIndex, currentCardIndex);
@@ -98,29 +102,30 @@ export function SortingAlgorithms() {
 
                 storeIndex++;
                 setSortingInfo(`Store Index: ${storeIndex}`);
-                setSelected([cards[currentCardIndex]], false);
+                setAttribute([cards[currentCardIndex]], CardAttributeSelected, false);
                 setCards(cloneDeep(cards));
             }
 
-            setSelected([cards[currentCardIndex]], false);
+            setAttribute([cards[currentCardIndex]], CardAttributeSelected, false);
             setCards(cloneDeep(cards));
             await setTimeOutAfter(WaitInSeconds);
         }
 
         const sortedIndex = storeIndex - 1;
 
-        setLabel([cards[startIndex]], 'Pivot Swap');
-        setLabel([cards[sortedIndex]], 'Store Index - 1 Swap');
+        setAttribute([cards[startIndex]], CardAttributelabel, 'Pivot Swap');
+        setAttribute([cards[sortedIndex]], CardAttributelabel, 'Store Index - 1 Swap');
         await setTimeOutAfter(WaitInSeconds);
 
         await swap(cards, startIndex, sortedIndex);
 
         await setTimeOutAfter(WaitInSeconds);
 
-        setGrayOutFlag([cards[sortedIndex]], true);
-        setLabel([cards[sortedIndex]], EmptyLabel);
+        setAttribute([cards[sortedIndex]], CardAttributeSorted, true);
+        setAttribute([cards[sortedIndex]], CardAttributelabel, EmptyLabel);
 
-        await updateCards();
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
 
         await quickSortSortPartition(startIndex, sortedIndex - 1);
         await quickSortSortPartition(sortedIndex + 1, endIndex);
@@ -141,13 +146,13 @@ export function SortingAlgorithms() {
             if (secondIndex > lastUnsortedIndex) {
 
                 if (cardsTraverseCount > 0 && !hasSwap) {
-                    setGrayOutFlag(cards, false);
+                    setAttribute(cards, CardAttributeSorted, false);
                     setCards(cloneDeep(cards));
                     await setTimeOutAfter(WaitInSeconds);
                     break;
                 }
 
-                setGrayOutFlag([cards[lastUnsortedIndex]], true);
+                setAttribute([cards[lastUnsortedIndex]], CardAttributeSorted, true);
                 await setTimeOutAfter(WaitInSeconds);
 
                 firstIndex = 0;
@@ -160,14 +165,14 @@ export function SortingAlgorithms() {
             const firstCard = cards[firstIndex];
             const secondCard = cards[secondIndex];
 
-            setSelected([firstCard, secondCard], true);
-            setLabel([firstCard], 'first');
-            setLabel([secondCard], 'second');
+            setAttribute([firstCard, secondCard], CardAttributeSelected, true);
+            setAttribute([firstCard], CardAttributelabel, 'first');
+            setAttribute([secondCard], CardAttributelabel, 'second');
             setCards(cloneDeep(cards));
             await setTimeOutAfter(WaitInSeconds);
 
             if (isGreaterThan(firstCard.value, secondCard.value)) {
-                setLabel([firstCard, secondCard], SwapLabel);
+                setAttribute([firstCard, secondCard], CardAttributelabel, SwapLabel);
 
                 await swap(cards, firstIndex, secondIndex);
                 hasSwap = true;
@@ -176,9 +181,9 @@ export function SortingAlgorithms() {
             }
 
             if (firstIndex === 0 && secondIndex === lastUnsortedIndex) {
-                setGrayOutFlag([firstCard, secondCard], true);
+                setAttribute([firstCard, secondCard], CardAttributeSorted, true);
                 await clearCardsSelectionsAndLabels([firstCard, secondCard]);
-                setGrayOutFlag(cards, false);
+                setAttribute(cards, CardAttributeSorted, false);
                 setCards(cloneDeep(cards));
                 break;
             }
@@ -192,13 +197,6 @@ export function SortingAlgorithms() {
         setIsSorting(false);
     }
 
-    const clearCardsSelectionsAndLabels = async (cardsArr) => {
-        setSelected(cardsArr, false);
-        setLabel(cardsArr, EmptyLabel);
-        setCards(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
-    }
-
     const startInsertionSort = async () => {
         setIsSorting(true);
         setShowCardsField(true);
@@ -208,8 +206,9 @@ export function SortingAlgorithms() {
 
         while (index < cards.length) {
 
-            setGrayOutFlag([cards[index - 1]], true);
-            await updateCards();
+            setAttribute([cards[index - 1]], CardAttributeSorted, true);
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
 
             const currentValue = cards[index].value;
             const previousValue = cards[index - 1].value;
@@ -218,7 +217,8 @@ export function SortingAlgorithms() {
 
                 const extracted = cards[index];
                 cards[index] = nullCard.current;
-                await updateCards();
+                setCards(cloneDeep(cards));
+                await setTimeOutAfter(WaitInSeconds);
 
                 cardsField[index] = extracted;
                 setCardsField(cloneDeep(cardsField));
@@ -231,11 +231,12 @@ export function SortingAlgorithms() {
                 while (insertIndex >= 0) {
                     if (insertIndex === 0 || extracted.value >= cards[insertIndex - 1].value) {
                         cards[insertIndex] = extracted;
-                        setGrayOutFlag([cards[insertIndex]], true);
+                        setAttribute([cards[insertIndex]], CardAttributeSorted, true);
 
                         cardsField[index] = nullCard.current;
                         setCardsField(cloneDeep(cardsField));
-                        await updateCards();
+                        setCards(cloneDeep(cards));
+                        await setTimeOutAfter(WaitInSeconds);
                         break;
                     }
                     await moveForward(cards, insertIndex - 1);
@@ -246,8 +247,9 @@ export function SortingAlgorithms() {
             index++;
         }
 
-        setGrayOutFlag(cards, false);
-        await updateCards();
+        setAttribute(cards, CardAttributeSorted, false);
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
         setIsSorting(false);
         setShowCardsField(false);
     }
@@ -262,32 +264,38 @@ export function SortingAlgorithms() {
             let minValueIndex = initialMinValueIndex;
             let minValue = cards[minValueIndex].value;
 
-            setLabel([cards[minValueIndex]], MinLabel);
-            await updateCards();
+            setAttribute([cards[minValueIndex]], CardAttributelabel, MinLabel);
+            setCards(cloneDeep(cards));
+            await setTimeOutAfter(WaitInSeconds);
 
             for (let index = iteration + 1; index < cards.length; index++) {
-                await setCardSelected(cards, index);
+
+                setAttribute([cards[index]], CardAttributeSelected, true);
+                setCards(cloneDeep(cards));
+                await setTimeOutAfter(WaitInSeconds);
 
                 const currentValue = cards[index].value;
                 if (currentValue < minValue) {
                     minValue = currentValue;
-                    setLabel([cards[minValueIndex]], EmptyLabel);
-                    setLabel([cards[iteration]], InitialMinLabel);
+                    setAttribute([cards[minValueIndex]], CardAttributelabel, EmptyLabel);
+                    setAttribute([cards[iteration]], CardAttributelabel, InitialMinLabel);
                     minValueIndex = index;
-                    setLabel([cards[minValueIndex]], MinLabel);
+                    setAttribute([cards[minValueIndex]], CardAttributelabel, MinLabel);
                 }
 
-                await clearCardSelected(cards, index);
+                setAttribute([cards[index]], CardAttributeSelected, false);
+                setCards(cloneDeep(cards));
+                await setTimeOutAfter(WaitInSeconds);
             }
 
             if (initialMinValueIndex !== minValueIndex) {
-                setLabel([cards[minValueIndex]], EmptyLabel);
-                setLabel([cards[initialMinValueIndex], cards[minValueIndex]], SwapLabel);
+                setAttribute([cards[minValueIndex]], CardAttributelabel, EmptyLabel);
+                setAttribute([cards[initialMinValueIndex], cards[minValueIndex]], CardAttributelabel, SwapLabel);
                 await swap(cards, initialMinValueIndex, minValueIndex);
-                setLabel([cards[initialMinValueIndex], cards[minValueIndex]], EmptyLabel);
+                setAttribute([cards[initialMinValueIndex], cards[minValueIndex]], CardAttributelabel, EmptyLabel);
                 await setTimeOutAfter(WaitInSeconds);
             } else {
-                setLabel([cards[initialMinValueIndex]], EmptyLabel);
+                setAttribute([cards[initialMinValueIndex]], CardAttributelabel, EmptyLabel);
             }
 
             await setCardSorted(cards[initialMinValueIndex]);
@@ -295,9 +303,12 @@ export function SortingAlgorithms() {
             iteration++;
         }
 
-        clearCardLabels(cards);
+        setAttribute(cards, CardAttributelabel, EmptyLabel);
         await setCardSorted(cards[cards.length - 1]);
-        await clearSortedFlag(cards);
+
+        setAttribute(cards, CardAttributeSorted, false);
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
 
         setIsSorting(false);
     }
@@ -378,58 +389,35 @@ export function SortingAlgorithms() {
         }
     }
 
-    const updateCards = async () => {
+    const clearCardsSelectionsAndLabels = async (cardsArr) => {
+        setAttribute(cardsArr, CardAttributeSelected, false);
+        setAttribute(cardsArr, CardAttributelabel, EmptyLabel);
         setCards(cloneDeep(cards));
         await setTimeOutAfter(WaitInSeconds);
     }
 
-    const setLabel = (cards, label) => {
-        cards.forEach(card => card.label = label);
-    }
-
-    const setGrayOutFlag = (cards, isGrayedOut) => {
-        cards.forEach(card => card.grayOut = isGrayedOut);
-    }
-
-    const setSelected = (cards, isSelected) => {
-        cards.forEach(card => card.selected = isSelected);
-    }
-
-    const setCardSelected = async (cards, cardIndex) => {
-        cards[cardIndex].selected = true;
-        await updateCards();
-    }
-
-    const clearCardSelected = async (cards, cardIndex) => {
-        cards[cardIndex].selected = false;
-        await updateCards();
-    }
-
-    const clearCardLabels = async (cards) => {
-        cards.forEach(c => c.label = '');
-        setCards(cards);
+    const setAttribute = (cards, attribute, value) => {
+        cards.forEach(card => card[`${attribute}`] = value);
     }
 
     const setCardSorted = async (card, cardIndex) => {
         card.grayOut = true;
-        await updateCards();
-    }
-
-    const clearSortedFlag = async (cards) => {
-        cards.forEach(card => card.grayOut = false);
-        await updateCards();
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
     }
 
     const moveForward = async (cards, index) => {
         cards[index].showRightSwapArrow = true;
-        await updateCards();
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
 
         const temp = cards[index];
         cards[index] = cards[index + 1];
         cards[index + 1] = temp;
 
         cards[index + 1].showRightSwapArrow = false;
-        await updateCards();
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
     }
 
     const swap = async (cards, fromIndex, toIndex) => {
@@ -441,7 +429,7 @@ export function SortingAlgorithms() {
 
         cards[fromIndex].showLeftSwapArrow = false;
         cards[toIndex].showRightSwapArrow = false;
-        setLabel([cards[fromIndex], cards[toIndex]], EmptyLabel);
+        setAttribute([cards[fromIndex], cards[toIndex]], CardAttributelabel, EmptyLabel);
 
         setCards(cloneDeep(cards));
     }
