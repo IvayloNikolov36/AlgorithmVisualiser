@@ -23,6 +23,7 @@ export function SortingAlgorithms() {
     const [sortingInfo, setSortingInfo] = useState('');
     const [showCardsField, setShowCardsField] = useState(false);
     const nullCard = useRef(new Card(null, null));
+    const aux = useRef([]);
 
     useEffect(() => {
         const initialCards = createCards();
@@ -301,6 +302,82 @@ export function SortingAlgorithms() {
         setIsSorting(false);
     }
 
+    const startMergeSort = async () => {
+        setIsSorting(true);
+        setShowCardsField(true);
+
+        await slice(cards, 0, cards.length - 1);
+
+        setCards(cloneDeep(cards));
+        setIsSorting(false);
+        setShowCardsField(false);
+    }
+
+    const slice = async (array, start, end) => {
+        if (start >= end) {
+            return;
+        }
+
+        const middle = parseInt(start + (end - start) / 2);
+
+        await slice(array, start, middle);
+        await slice(array, middle + 1, end);
+
+        await merge(array, start, middle, end);
+    }
+
+    const merge = async (array, start, mid, end) => {
+        setCardsField(createCardsField());
+        setCardsField(cloneDeep(cardsField));
+
+        if (array[mid].value < array[mid + 1].value) {
+
+            /* UI */
+            await setTimeOutAfter(WaitInSeconds);
+
+            for (let index = start; index <= end; index++) {
+                cardsField[index] = array[index];
+                array[index] = nullCard.current;
+            }
+
+            setCardsField(cloneDeep(cardsField));
+
+            for (let index = start; index <= end; index++) {
+                array[index] = cardsField[index];
+            }
+
+            await setTimeOutAfter(WaitInSeconds);
+            /* end UI code */
+
+            return;
+        }
+
+        for (let index = start; index <= end; index++) {
+            aux.current[index] = array[index];
+
+            cardsField[index] = array[index];
+            array[index] = nullCard.current;
+        }
+
+        setCardsField(cloneDeep(cardsField));
+        await setTimeOutAfter(WaitInSeconds);
+
+        let i = start;
+        let j = mid + 1;
+
+        for (let index = start; index <= end; index++) {
+            if (i > mid) {
+                array[index] = aux.current[j++];
+            } else if (j > end) {
+                array[index] = aux.current[i++];
+            } else if (aux.current[i].value < aux.current[j].value) {
+                array[index] = aux.current[i++];
+            } else {
+                array[index] = aux.current[j++];
+            }
+        }
+    }
+
     const updateCards = async () => {
         setCards(cloneDeep(cards));
         await setTimeOutAfter(WaitInSeconds);
@@ -496,6 +573,13 @@ export function SortingAlgorithms() {
                         disabled={isSorting}
                     >
                         Selection Sort
+                    </Button>
+                    <Button
+                        onClick={startMergeSort}
+                        variant="outline-primary"
+                        disabled={isSorting}
+                    >
+                        Merge Sort
                     </Button>
                 </ButtonGroup>
             </div>
