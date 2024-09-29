@@ -1,0 +1,9 @@
+export const CardsCount = 8;
+export const WaitInSeconds = 0.6;
+export const SwapLabel = 'swap';
+export const CardAttributelabel = 'label';
+export const CardAttributeSelected = 'selected';
+export const CardAttributeSorted = 'grayOut';
+export const EmptyLabel = '';
+export const MinLabel = 'Min';
+export const InitialMinLabel = 'Initial Min';
