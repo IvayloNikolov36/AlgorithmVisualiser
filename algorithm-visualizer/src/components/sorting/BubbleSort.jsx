@@ -4,7 +4,7 @@ import { setTimeOutAfter } from "../../helpers/thread-sleep";
 import { CardAttributeSorted, CardAttributeSelected, CardAttributelabel, SwapLabel, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
-export function BubbleSort({ elements, startSorting, endSorting }) {
+export function BubbleSort({ elements, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const isSorting = useRef(false);
@@ -117,28 +117,25 @@ export function BubbleSort({ elements, startSorting, endSorting }) {
     }
 
     return (
-        <>
-            <div className="d-flex justify-content-center mx-5 mt-2 cards-info">
-            </div>
-            <div className="d-flex justify-content-around mx-3 my-1 pt-1">
-                {
-                    cardElements?.map((card, index) => {
-                        return <div
-                            className="d-flex-col"
-                            key={index}
-                        >
-                            <div className="d-flex align-items-end card-label text-start">
-                                <span>{card.label}</span>
-                            </div>
-
-                            {getCardStructure(card, index, true)}
-
-                            <div className="d-flex align-items-end text-start mt-3 ms-1">
-                                <span className="text-info fs-5">{index}</span>
-                            </div>
+        <div className="d-flex justify-content-around mx-3 my-1 pt-1">
+            {
+                cardElements?.map((card, index) => {
+                    return <div
+                        className="d-flex-col"
+                        key={index}
+                    >
+                        <div className="d-flex align-items-end card-label text-start">
+                            <span>{card.label}</span>
                         </div>
-                    })
-                }
-            </div>
-        </>)
+
+                        {getCardStructure(card, index, true)}
+
+                        <div className="d-flex align-items-end text-start mt-3 ms-1">
+                            <span className="text-info fs-5">{index}</span>
+                        </div>
+                    </div>
+                })
+            }
+        </div>
+    )
 }

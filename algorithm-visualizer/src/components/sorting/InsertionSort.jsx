@@ -3,9 +3,13 @@ import { cloneDeep } from 'lodash';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import { Card } from '../../models/card';
 import { CardAttributeSorted, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
-import { createEmptyCards, getCardStructure, setAttribute } from '../../functions/sorting-algorithms-functions';
+import {
+    createEmptyCards,
+    getCardStructure,
+    setAttribute
+} from '../../functions/sorting-algorithms-functions';
 
-export function InsertionSort({ elements, startSorting, endSorting }) {
+export function InsertionSort({ elements, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [cardsField, setCardsField] = useState([]);
@@ -94,8 +98,6 @@ export function InsertionSort({ elements, startSorting, endSorting }) {
 
     return (
         <>
-            <div className="d-flex justify-content-center mx-5 mt-2 cards-info">
-            </div>
             <div className="d-flex justify-content-around mx-3 my-1 pt-1">
                 {
                     cardElements.map((card, index) => {

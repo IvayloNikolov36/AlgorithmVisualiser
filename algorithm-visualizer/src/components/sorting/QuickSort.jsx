@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../../helpers/thread-sleep";
-import { CardAttributeSorted, CardAttributeSelected, CardAttributelabel, SwapLabel, WaitInSeconds, EmptyLabel } from "../../constants/sorting-algorithms-constants";
+import {
+    CardAttributeSorted,
+    CardAttributeSelected,
+    CardAttributelabel,
+    SwapLabel,
+    WaitInSeconds,
+    EmptyLabel
+} from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
-export function QuickSort({ elements, startSorting, endSorting }) {
+export function QuickSort({ elements, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [sortingInfo, setSortingInfo] = useState('');

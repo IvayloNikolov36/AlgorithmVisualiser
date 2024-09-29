@@ -15,6 +15,10 @@ export const createEmptyCards = (cardsCount) => {
     return cardsField;
 }
 
+export const setCardSorted = async (card) => {
+    card.grayOut = true;
+}
+
 export const getCardStructure = (card, index, showArrows = false) => {
     return <div
         className={`card ${card?.grayOut ? 'grayOutCard' : ''} ${card?.selected ? 'selectedCard' : ''} justify-content-between`}
