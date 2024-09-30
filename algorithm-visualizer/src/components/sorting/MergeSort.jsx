@@ -3,10 +3,9 @@ import { cloneDeep } from 'lodash';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import { Card } from '../../models/card';
 import { WaitInSeconds } from "../../constants/sorting-algorithms-constants";
-import {
-    createEmptyCards,
-    getCardStructure
-} from '../../functions/sorting-algorithms-functions';
+import { createEmptyCards, } from '../../functions/sorting-algorithms-functions';
+import { CardsContainer } from './CardsContainer';
+import { AuxCardsContainer } from './AuxCardsContainer';
 
 export function MergeSort({ elements, endSorting }) {
 
@@ -107,35 +106,8 @@ export function MergeSort({ elements, endSorting }) {
 
     return (
         <>
-            <div className="d-flex justify-content-around mx-3 my-1 pt-1">
-                {
-                    cardElements.map((card, index) => {
-                        return <div
-                            className="d-flex-col"
-                            key={index}
-                        >
-                            <div className="d-flex align-items-end card-label text-start">
-                                <span>{card.label}</span>
-                            </div>
-
-                            {getCardStructure(card, index, true)}
-
-                            <div className="d-flex align-items-end text-start mt-3 ms-1">
-                                <span className="text-info fs-5">{index}</span>
-                            </div>
-                        </div>
-                    })
-                }
-            </div>
-            <div className="d-flex justify-content-around mx-3 my-1 pt-1">
-                {
-                    cardsField.map((card, index) => {
-                        return <div className="d-flex-col">
-                            {getCardStructure(card, index, false)}
-                        </div>
-                    })
-                }
-            </div>
+            <CardsContainer cardElements={cardElements} />
+            <AuxCardsContainer cardElements={cardsField} />
         </>
     )
 } 
