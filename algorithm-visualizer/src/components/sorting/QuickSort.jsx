@@ -5,9 +5,11 @@ import {
     CardAttributeSorted,
     CardAttributeSelected,
     CardAttributelabel,
+    EmptyLabel,
+    PivotLabel,
+    StoreIndexLabel,
     SwapLabel,
-    WaitInSeconds,
-    EmptyLabel
+    WaitInSeconds
 } from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
@@ -60,8 +62,8 @@ export function QuickSort({ elements, swap, endSorting }) {
         const pivotValue = cardElements[startIndex].value;
         let storeIndex = startIndex + 1;
 
-        setAttribute([cardElements[startIndex]], CardAttributelabel, 'Pivot');
-        setSortingInfo(`Store Index: ${storeIndex}`);
+        setAttribute([cardElements[startIndex]], CardAttributelabel, PivotLabel);
+        setSortingInfo(getStoreIndexLabel(storeIndex));
         setCardElements(cloneDeep(cardElements));
         await setTimeOutAfter(WaitInSeconds);
 
@@ -85,7 +87,7 @@ export function QuickSort({ elements, swap, endSorting }) {
                 }
 
                 storeIndex++;
-                setSortingInfo(`Store Index: ${storeIndex}`);
+                setSortingInfo(getStoreIndexLabel(storeIndex));
                 setAttribute([cardElements[currentCardIndex]], CardAttributeSelected, false);
                 setCardElements(cloneDeep(cardElements));
             }
@@ -97,8 +99,8 @@ export function QuickSort({ elements, swap, endSorting }) {
 
         const sortedIndex = storeIndex - 1;
 
-        setAttribute([cardElements[startIndex]], CardAttributelabel, 'Pivot Swap');
-        setAttribute([cardElements[sortedIndex]], CardAttributelabel, 'Store Index - 1 Swap');
+        setAttribute([cardElements[startIndex]], CardAttributelabel, `${PivotLabel} ${SwapLabel}`);
+        setAttribute([cardElements[sortedIndex]], CardAttributelabel, `${StoreIndexLabel} - 1 ${SwapLabel}`);
         await setTimeOutAfter(WaitInSeconds);
 
         await swap(cardElements, startIndex, sortedIndex);
@@ -113,6 +115,10 @@ export function QuickSort({ elements, swap, endSorting }) {
 
         await sortPartition(startIndex, sortedIndex - 1);
         await sortPartition(sortedIndex + 1, endIndex);
+    }
+
+    const getStoreIndexLabel = (index) => {
+        return `Store Index: ${index}`;
     }
 
     return (

@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../../helpers/thread-sleep";
-import { CardAttributeSorted, CardAttributeSelected, CardAttributelabel, SwapLabel, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
+import {
+    CardAttributeSorted,
+    CardAttributeSelected,
+    CardAttributelabel,
+    FirstLabel,
+    SecondLabel,
+    SwapLabel,
+    WaitInSeconds,
+    EmptyLabel
+} from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
 export function BubbleSort({ elements, swap, endSorting }) {
@@ -55,8 +64,8 @@ export function BubbleSort({ elements, swap, endSorting }) {
             const secondCard = cardElements[secondIndex];
 
             setAttribute([firstCard, secondCard], CardAttributeSelected, true);
-            setAttribute([firstCard], CardAttributelabel, 'first');
-            setAttribute([secondCard], CardAttributelabel, 'second');
+            setAttribute([firstCard], CardAttributelabel, FirstLabel);
+            setAttribute([secondCard], CardAttributelabel, SecondLabel);
             setCardElements(cloneDeep(cardElements));
             await setTimeOutAfter(WaitInSeconds);
 
@@ -89,7 +98,7 @@ export function BubbleSort({ elements, swap, endSorting }) {
 
     const clearCardsSelectionsAndLabels = async (cardsArr) => {
         setAttribute(cardsArr, CardAttributeSelected, false);
-        setAttribute(cardsArr, CardAttributelabel, '');
+        setAttribute(cardsArr, CardAttributelabel, EmptyLabel);
         setCardElements(cloneDeep(cardElements));
         await setTimeOutAfter(WaitInSeconds);
     }
