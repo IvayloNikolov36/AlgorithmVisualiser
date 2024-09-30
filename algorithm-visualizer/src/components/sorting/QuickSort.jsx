@@ -11,7 +11,7 @@ import {
 } from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
-export function QuickSort({ elements, endSorting }) {
+export function QuickSort({ elements, swap, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [sortingInfo, setSortingInfo] = useState('');
@@ -113,29 +113,6 @@ export function QuickSort({ elements, endSorting }) {
 
         await sortPartition(startIndex, sortedIndex - 1);
         await sortPartition(sortedIndex + 1, endIndex);
-    }
-
-    // the same as in Bubble Sort
-    const swap = async (cards, fromIndex, toIndex) => {
-        await showCardsSwapArrows(cards[fromIndex], cards[toIndex]);
-
-        const temp = cards[fromIndex];
-        cards[fromIndex] = cards[toIndex];
-        cards[toIndex] = temp;
-
-        cards[fromIndex].showLeftSwapArrow = false;
-        cards[toIndex].showRightSwapArrow = false;
-        setAttribute([cards[fromIndex], cards[toIndex]], CardAttributelabel, '');
-
-        setCardElements(cloneDeep(cardElements));
-    }
-
-    const showCardsSwapArrows = async (firstCard, secondCard) => {
-        firstCard.showRightSwapArrow = true;
-        secondCard.showLeftSwapArrow = true;
-        setCardElements(cloneDeep(cardElements));
-
-        await setTimeOutAfter(WaitInSeconds);
     }
 
     return (

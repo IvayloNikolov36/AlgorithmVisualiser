@@ -13,7 +13,7 @@ import {
 } from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute, setCardSorted } from "../../functions/sorting-algorithms-functions";
 
-export function SelectionSort({ elements, endSorting }) {
+export function SelectionSort({ elements, swap, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const isSorting = useRef(false);
@@ -68,6 +68,7 @@ export function SelectionSort({ elements, endSorting }) {
                 setAttribute([cardElements[minValueIndex]], CardAttributelabel, EmptyLabel);
                 setAttribute([cardElements[initialMinValueIndex], cardElements[minValueIndex]], CardAttributelabel, SwapLabel);
                 await swap(cardElements, initialMinValueIndex, minValueIndex);
+                setCardElements(cloneDeep(cardElements));
                 setAttribute([cardElements[initialMinValueIndex], cardElements[minValueIndex]], CardAttributelabel, EmptyLabel);
                 await setTimeOutAfter(WaitInSeconds);
             } else {
@@ -92,30 +93,6 @@ export function SelectionSort({ elements, endSorting }) {
 
         isSorting.current = false;
         endSorting();
-    }
-
-    // TODO:  the same as in Bubble Sort and QuickSort
-
-    const swap = async (cards, fromIndex, toIndex) => {
-        await showCardsSwapArrows(cards[fromIndex], cards[toIndex]);
-
-        const temp = cards[fromIndex];
-        cards[fromIndex] = cards[toIndex];
-        cards[toIndex] = temp;
-
-        cards[fromIndex].showLeftSwapArrow = false;
-        cards[toIndex].showRightSwapArrow = false;
-        setAttribute([cards[fromIndex], cards[toIndex]], CardAttributelabel, '');
-
-        setCardElements(cloneDeep(cardElements));
-    }
-
-    const showCardsSwapArrows = async (firstCard, secondCard) => {
-        firstCard.showRightSwapArrow = true;
-        secondCard.showLeftSwapArrow = true;
-        setCardElements(cloneDeep(cardElements));
-
-        await setTimeOutAfter(WaitInSeconds);
     }
 
     return (

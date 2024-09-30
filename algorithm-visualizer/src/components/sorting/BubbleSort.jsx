@@ -4,7 +4,7 @@ import { setTimeOutAfter } from "../../helpers/thread-sleep";
 import { CardAttributeSorted, CardAttributeSelected, CardAttributelabel, SwapLabel, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
 import { getCardStructure, setAttribute } from "../../functions/sorting-algorithms-functions";
 
-export function BubbleSort({ elements, endSorting }) {
+export function BubbleSort({ elements, swap, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const isSorting = useRef(false);
@@ -91,28 +91,6 @@ export function BubbleSort({ elements, endSorting }) {
         setAttribute(cardsArr, CardAttributeSelected, false);
         setAttribute(cardsArr, CardAttributelabel, '');
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
-    }
-
-    const swap = async (cards, fromIndex, toIndex) => {
-        await showCardsSwapArrows(cards[fromIndex], cards[toIndex]);
-
-        const temp = cards[fromIndex];
-        cards[fromIndex] = cards[toIndex];
-        cards[toIndex] = temp;
-
-        cards[fromIndex].showLeftSwapArrow = false;
-        cards[toIndex].showRightSwapArrow = false;
-        setAttribute([cards[fromIndex], cards[toIndex]], CardAttributelabel, '');
-
-        setCardElements(cloneDeep(cardElements));
-    }
-
-    const showCardsSwapArrows = async (firstCard, secondCard) => {
-        firstCard.showRightSwapArrow = true;
-        secondCard.showLeftSwapArrow = true;
-        setCardElements(cloneDeep(cardElements));
-
         await setTimeOutAfter(WaitInSeconds);
     }
 

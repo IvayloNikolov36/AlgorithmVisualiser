@@ -11,16 +11,17 @@ import {
     MergeSort,
     SelectionSort
 } from "./sorting";
-import { CardsCount } from "../constants/sorting-algorithms-constants";
+import { CardAttributelabel, CardsCount, EmptyLabel, WaitInSeconds } from "../constants/sorting-algorithms-constants";
 import { SortingAlgorithmEnum } from "../enums/sorting-algorithm.enum";
-
+import { setAttribute } from "../functions/sorting-algorithms-functions";
+import { setTimeOutAfter } from "../helpers/thread-sleep";
 
 export function SortingAlgorithms() {
 
     const [cards, setCards] = useState([]);
     const [unsortedCards, setUnsortedCards] = useState([]);
-    const isSorting = useRef(false);
     const [selectedSortAlgorithm, setSelectedSortAlgorithm] = useState(null);
+    const isSorting = useRef(false);
 
     useEffect(() => {
         const initialCards = createCards();
@@ -56,6 +57,25 @@ export function SortingAlgorithms() {
             case 4: return CardSuitEnum.Spades;
             default: throw Error('Unhandled card suit.');
         }
+    }
+
+    const swap = async (cards, fromIndex, toIndex) => {
+        await showCardsSwapArrows(cards, fromIndex, toIndex);
+
+        const temp = cards[fromIndex];
+        cards[fromIndex] = cards[toIndex];
+        cards[toIndex] = temp;
+
+        cards[fromIndex].showLeftSwapArrow = false;
+        cards[toIndex].showRightSwapArrow = false;
+        setAttribute([cards[fromIndex], cards[toIndex]], CardAttributelabel, EmptyLabel);
+    }
+
+    const showCardsSwapArrows = async (cards, fromIndex, toIndex) => {
+        cards[fromIndex].showRightSwapArrow = true;
+        cards[toIndex].showLeftSwapArrow = true;
+        setCards(cloneDeep(cards));
+        await setTimeOutAfter(WaitInSeconds);
     }
 
     const reset = () => {
@@ -100,15 +120,13 @@ export function SortingAlgorithms() {
     }
 
     const renderSelectedAlgorithm = () => {
-        debugger;
-
         switch (selectedSortAlgorithm) {
             case SortingAlgorithmEnum.BubbleSort:
-                return (<BubbleSort elements={cards} endSorting={endSorting} />);
+                return (<BubbleSort elements={cards} swap={swap} endSorting={endSorting} />);
             case SortingAlgorithmEnum.QuickSort:
-                return (<QuickSort elements={cards} endSorting={endSorting} />);
+                return (<QuickSort elements={cards} swap={swap} endSorting={endSorting} />);
             case SortingAlgorithmEnum.SelectionSort:
-                return (<SelectionSort elements={cards} endSorting={endSorting} />);
+                return (<SelectionSort elements={cards} swap={swap} endSorting={endSorting} />);
             case SortingAlgorithmEnum.InsertionSort:
                 return (<InsertionSort elements={cards} endSorting={endSorting} />);
             case SortingAlgorithmEnum.MergeSort:
