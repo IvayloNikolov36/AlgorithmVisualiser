@@ -78,7 +78,7 @@ export function SortingAlgorithms() {
         await setTimeOutAfter(WaitInSeconds);
     }
 
-    const reset = () => {
+    const revert = () => {
         setCards(cloneDeep(unsortedCards));
     }
 
@@ -171,7 +171,7 @@ export function SortingAlgorithms() {
                 </DropdownButton>
                 <Button
                     onClick={startAlgorithm}
-                    variant="outline-primary"
+                    variant="primary"
                     disabled={isSorting || selectedSortAlgorithm === null}
                 > Start Algorithm
                 </Button>
@@ -183,10 +183,10 @@ export function SortingAlgorithms() {
                     > Generate New Cards
                     </Button>
                     <Button
-                        onClick={reset}
+                        onClick={revert}
                         variant="outline-primary"
                         disabled={isSorting}
-                    > Reset
+                    > Revert
                     </Button>
                 </ButtonGroup>
             </div>
