@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cloneDeep } from 'lodash';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import { Card } from '../../models/card';
-import { WaitInSeconds } from "../../constants/sorting-algorithms-constants";
+import { CardsCount, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
 import { createEmptyCards, } from '../../functions/sorting-algorithms-functions';
 import { CardsContainer } from './CardsContainer';
 import { AuxCardsContainer } from './AuxCardsContainer';
@@ -11,14 +11,15 @@ export function MergeSort({ elements, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [cardsField, setCardsField] = useState([]);
-    const nullCard = useRef(new Card(null, null));
+    const cardsFieldRef = useRef([]);
     const aux = useRef([]);
+    const nullCard = useRef(new Card(null, null));
     const isSorting = useRef(false);
 
     useEffect(() => {
-        const clonedElements = cloneDeep(elements);
-        setCardElements(clonedElements);
-        setCardsField(createEmptyCards(clonedElements.length));
+        setCardElements(cloneDeep(elements));
+        cardsFieldRef.current = createEmptyCards(CardsCount);
+        setCardsField(cardsFieldRef.current);
     }, [elements])
 
     useEffect(() => {
@@ -53,27 +54,29 @@ export function MergeSort({ elements, endSorting }) {
     }
 
     const merge = async (array, start, mid, end) => {
-        setCardsField(createEmptyCards());
-        setCardsField(cloneDeep(cardsField));
+
+        const emptyCards = createEmptyCards(CardsCount);
+        cardsFieldRef.current = emptyCards;
+        setCardsField(emptyCards);
+        await setTimeOutAfter(WaitInSeconds);
 
         if (array[mid].value < array[mid + 1].value) {
 
-            /* UI */
-            await setTimeOutAfter(WaitInSeconds);
-
             for (let index = start; index <= end; index++) {
-                cardsField[index] = array[index];
+                cardsFieldRef.current[index] = array[index];
                 array[index] = nullCard.current;
             }
 
-            setCardsField(cloneDeep(cardsField));
+            setCardsField(cloneDeep(cardsFieldRef.current));
+            await setTimeOutAfter(WaitInSeconds);
 
             for (let index = start; index <= end; index++) {
-                array[index] = cardsField[index];
+                array[index] = cardsFieldRef.current[index];
+                cardsFieldRef.current[index] = nullCard.current;
             }
 
+            setCardsField(cloneDeep(cardsFieldRef.current));
             await setTimeOutAfter(WaitInSeconds);
-            /* end UI code */
 
             return;
         }
@@ -81,11 +84,11 @@ export function MergeSort({ elements, endSorting }) {
         for (let index = start; index <= end; index++) {
             aux.current[index] = array[index];
 
-            cardsField[index] = array[index];
+            cardsFieldRef.current[index] = array[index];
             array[index] = nullCard.current;
         }
 
-        setCardsField(cloneDeep(cardsField));
+        setCardsField(cloneDeep(cardsFieldRef.current));
         await setTimeOutAfter(WaitInSeconds);
 
         let i = start;
