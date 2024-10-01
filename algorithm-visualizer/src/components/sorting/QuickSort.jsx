@@ -44,7 +44,7 @@ export function QuickSort({ elements, swap, endSorting }) {
         setCardElements(cloneDeep(cardElements));
 
         isSorting.current = false;
-        endSorting();
+        endSorting(cardElements);
     }
 
     const sortPartition = async (startIndex, endIndex) => {

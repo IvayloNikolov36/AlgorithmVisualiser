@@ -93,7 +93,7 @@ export function SelectionSort({ elements, swap, endSorting }) {
         await setTimeOutAfter(WaitInSeconds);
 
         isSorting.current = false;
-        endSorting();
+        endSorting(cardElements);
     }
 
     return (

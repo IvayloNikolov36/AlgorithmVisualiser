@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "../models/card";
 import { CardSuitEnum } from "../enums/card-suit.enum";
 import { cloneDeep, random } from "lodash";
@@ -9,7 +8,8 @@ import {
     InsertionSort,
     QuickSort,
     MergeSort,
-    SelectionSort
+    SelectionSort,
+    CardsContainer
 } from "./sorting";
 import { CardAttributelabel, CardsCount, EmptyLabel, WaitInSeconds } from "../constants/sorting-algorithms-constants";
 import { SortingAlgorithmEnum } from "../enums/sorting-algorithm.enum";
@@ -21,7 +21,7 @@ export function SortingAlgorithms() {
     const [cards, setCards] = useState([]);
     const [unsortedCards, setUnsortedCards] = useState([]);
     const [selectedSortAlgorithm, setSelectedSortAlgorithm] = useState(null);
-    const isSorting = useRef(false);
+    const [isSorting, setIsSorting] = useState(false);
 
     useEffect(() => {
         const initialCards = createCards();
@@ -82,13 +82,16 @@ export function SortingAlgorithms() {
         setCards(cloneDeep(unsortedCards));
     }
 
-    const endSorting = () => {
-        isSorting.current = false;
+    const endSorting = (cardElements) => {
+        setIsSorting(false);
+        setCards(cloneDeep(cardElements));
+    }
+
+    const startAlgorithm = () => {
+        setIsSorting(true);
     }
 
     const selectedSortingAlgorithm = (name) => {
-        isSorting.current = true;
-
         switch (name) {
             case SortingAlgorithmEnum.BubbleSort:
                 setSelectedSortAlgorithm(SortingAlgorithmEnum.BubbleSort);
@@ -109,7 +112,15 @@ export function SortingAlgorithms() {
         }
     }
 
-    const getAlogorithmNames = () => {
+    const getDropdownTitle = () => {
+        if (selectedSortAlgorithm === null) {
+            return 'Select Algorithm';
+        }
+
+        return selectedSortAlgorithm;
+    }
+
+    const getAlgorithmNames = () => {
         return [
             SortingAlgorithmEnum.BubbleSort,
             SortingAlgorithmEnum.QuickSort,
@@ -120,6 +131,10 @@ export function SortingAlgorithms() {
     }
 
     const renderSelectedAlgorithm = () => {
+        if (!isSorting) {
+            return <CardsContainer cardElements={cards} />;
+        }
+
         switch (selectedSortAlgorithm) {
             case SortingAlgorithmEnum.BubbleSort:
                 return (<BubbleSort elements={cards} swap={swap} endSorting={endSorting} />);
@@ -131,40 +146,46 @@ export function SortingAlgorithms() {
                 return (<InsertionSort elements={cards} endSorting={endSorting} />);
             case SortingAlgorithmEnum.MergeSort:
                 return (<MergeSort elements={cards} endSorting={endSorting} />);
-            default: return (<></>);
+            default: return;
         }
     }
 
     return (
         <div className="container-fluid">
-            <div className="d-flex justify-content-start px-3 py-2 gap-5">
+            <div className="d-flex justify-content-around px-3 py-2">
                 <DropdownButton
                     id="dropdown-sorting-algorithms"
-                    title="Select Algorithm"
-                    disabled={isSorting.current}
+                    title={getDropdownTitle()}
+                    variant="outline-primary"
+                    disabled={isSorting}
                 >
                     {
-                        getAlogorithmNames().map((name) => {
+                        getAlgorithmNames().map((name) => {
                             return <Dropdown.Item
                                 onClick={() => selectedSortingAlgorithm(name)}
                                 key={name}
-                            >
-                                {name}
+                            > {name}
                             </Dropdown.Item>
                         })
                     }
                 </DropdownButton>
+                <Button
+                    onClick={startAlgorithm}
+                    variant="outline-primary"
+                    disabled={isSorting || selectedSortAlgorithm === null}
+                > Start Algorithm
+                </Button>
                 <ButtonGroup>
                     <Button
                         onClick={generateNewCards}
                         variant="outline-primary"
-                        disabled={isSorting.current}
+                        disabled={isSorting}
                     > Generate New Cards
                     </Button>
                     <Button
                         onClick={reset}
                         variant="outline-primary"
-                        disabled={isSorting.current}
+                        disabled={isSorting}
                     > Reset
                     </Button>
                 </ButtonGroup>

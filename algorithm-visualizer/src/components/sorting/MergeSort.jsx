@@ -36,7 +36,7 @@ export function MergeSort({ elements, endSorting }) {
         setCardElements(cloneDeep(cardElements));
 
         isSorting.current = false;
-        endSorting();
+        endSorting(cardElements);
     }
 
     const slice = async (array, start, end) => {

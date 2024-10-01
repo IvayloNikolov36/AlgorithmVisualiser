@@ -93,8 +93,7 @@ export function BubbleSort({ elements, swap, endSorting }) {
             await clearCardsSelectionsAndLabels([firstCard, secondCard]);
         }
 
-        isSorting.current = false;
-        endSorting();
+        endSorting(cardElements);
     }
 
     const clearCardsSelectionsAndLabels = async (cardsArr) => {

@@ -77,7 +77,7 @@ export function InsertionSort({ elements, endSorting }) {
         setCardElements(cloneDeep(cardElements));
         await setTimeOutAfter(WaitInSeconds);
 
-        endSorting();
+        endSorting(cardElements);
     }
 
     const moveForward = async (cards, index) => {
