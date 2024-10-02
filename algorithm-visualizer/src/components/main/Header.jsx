@@ -10,6 +10,7 @@ export function Header() {
                 <NavLink to={routes.EightQueens}>Eight Queens</NavLink>
                 <NavLink to={routes.TowerOfHanoi}>Tower Of Hanoi</NavLink>
                 <NavLink to={routes.Sorting}>Sorting Algorithms</NavLink>
+                <NavLink to={routes.KnightsTour}>Knight's Tour</NavLink>
             </div>
         </div>
     );

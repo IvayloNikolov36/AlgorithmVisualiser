@@ -54,7 +54,7 @@
 /* --- Chess Board --- */
 
 .chessCell,
-.chessCellFirstRow {
+.chessCellSelectable {
   width: 3.65rem !important;
   height: 3.65rem !important;
   font-size: 3rem;
@@ -79,7 +79,7 @@
   border-color: rgb(24, 4, 4);
 }
 
-.chessCellFirstRow:hover {
+.chessCellSelectable:hover {
   background-color: #0D6EFD;
   cursor: pointer;
 }

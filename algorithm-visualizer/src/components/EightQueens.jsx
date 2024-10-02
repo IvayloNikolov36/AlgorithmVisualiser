@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { BlackCell, WhiteCell } from "../constants/board-constants";
+import { WhiteCell } from "../constants/board-constants";
+import { generateBoard } from "../functions/chess-board-functions";
 import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
 import { ButtonGroup, Button, ToggleButton } from "react-bootstrap";
@@ -8,44 +9,21 @@ const BoardRows = 8;
 const BoardCols = 8;
 const WaitInSeconds = 0.5;
 
-export function ChessBoard() {
+export function EightQueens() {
 
     const [board, setBoard] = useState([]);
+    const [animateAlgorithm, setAnimateAlgorithm] = useState(false);
+    const [isPlacingQueens, setIsPlacingQueeens] = useState(false);
     const placedQueens = useRef([]);
     const attackedHorizontals = useRef([]);
     const attackedVerticals = useRef([]);
     const attackedLeftDiagonals = useRef([]);
     const attackedRightDiagonals = useRef([]);
-    const [animateAlgorithm, setAnimateAlgorithm] = useState(false);
-    const [isPlacingQueens, setIsPlacingQueeens] = useState(false);
 
     useEffect(() => {
-        const board = generateBoard();
+        const board = generateBoard(BoardRows, BoardCols);
         setBoard(board);
     }, []);
-
-    const generateBoard = () => {
-        const board = [];
-
-        let startWithWhiteCell = true;
-
-        for (let row = 0; row < BoardRows; row++) {
-            const rowArray = [];
-
-            for (let col = 0; col < BoardCols; col++) {
-                const cellColor = col % 2 === 0
-                    ? startWithWhiteCell ? WhiteCell : BlackCell
-                    : startWithWhiteCell ? BlackCell : WhiteCell;
-                const cellValue = [cellColor, false, false];
-                rowArray.push(cellValue);
-            }
-
-            startWithWhiteCell = !startWithWhiteCell;
-            board.push(rowArray);
-        }
-
-        return board;
-    }
 
     const placeQueens = async () => {
         setIsPlacingQueeens(true);
@@ -238,7 +216,7 @@ export function ChessBoard() {
                                         return <div
                                             onClick={() => clickBoardCell(rowIndex, colIndex)}
                                             className={rowIndex === 0
-                                                ? `chessCellFirstRow ${cellColor}`
+                                                ? `chessCellSelectable ${cellColor}`
                                                 : `chessCell ${cellColor}`}
                                             key={colIndex}
                                             style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
