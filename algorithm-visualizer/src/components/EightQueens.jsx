@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { WhiteCell } from "../constants/board-constants";
 import { generateBoard } from "../functions/chess-board-functions";
-import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
+import { cloneDeep } from "lodash";
 import { ButtonGroup, Button, ToggleButton } from "react-bootstrap";
 
 const BoardRows = 8;
@@ -68,7 +68,7 @@ export function EightQueens() {
             let [queenRow, queenCol] = placedQueens.current.pop();
             await unMarkQueen(queenRow, queenCol);
 
-            if (queenCol === board[queenRow].length - 1) {
+            if (queenCol === BoardCols - 1) {
 
                 if (placedQueens.current.length === 0) {
                     resetBoard();
@@ -88,7 +88,7 @@ export function EightQueens() {
     }
 
     const placeQueen = async (row, col) => {
-        board[row][col] = [board[row][col][0], true];
+        setChessSquareData(row, col, { color: getSquareColor(row, col), hasPlacedQueen: true, hasToRemoveQueen: false });
         setBoard(cloneDeep(board));
         placedQueens.current.push([row, col]);
         setAttackedPaths(placedQueens.current);
@@ -98,20 +98,26 @@ export function EightQueens() {
     }
 
     const unMarkQueen = async (queenRow, queenCol) => {
-        const cellValue = board[queenRow][queenCol];
+        const cellColor = getSquareColor(queenRow, queenCol);
 
         if (animateAlgorithm) {
-            board[queenRow][queenCol] = [cellValue[0], true, true];
+            setChessSquareData(
+                queenRow,
+                queenCol,
+                { color: cellColor, hasPlacedQueen: true, hasToRemoveQueen: true });
             setBoard(cloneDeep(board));
             await setTimeOutAfter(WaitInSeconds);
         }
 
-        board[queenRow][queenCol] = [cellValue[0], false, false];
+        setChessSquareData(
+            queenRow,
+            queenCol,
+            { color: cellColor, hasPlacedQueen: false, hasToRemoveQueen: false });
     }
 
     const clickBoardCell = async (row, col) => {
 
-        if (row !== 0) {
+        if (row !== 0 || isPlacingQueens) {
             return;
         }
 
@@ -127,7 +133,7 @@ export function EightQueens() {
     const resetBoard = () => {
         placedQueens.current = [];
         clearAttackedPaths();
-        board.forEach(row => row.forEach(cell => cell[1] = false));
+        board.forEach(row => row.forEach(cell => setHasQueen(cell, false)));
         setBoard(cloneDeep(board));
     }
 
@@ -159,7 +165,7 @@ export function EightQueens() {
     }
 
     const getRightDiagonal = (row, col) => {
-        while (row > 0 && col < board[0].length) {
+        while (row > 0 && col < BoardCols) {
             row--;
             col++;
         }
@@ -184,8 +190,26 @@ export function EightQueens() {
         return !isRowAttacked && !isColAttacked && !isLeftDiagonalAttacked && !isRightDiagonalAttacked;
     }
 
+    const getSquareColor = (row, col) => {
+        return board[row][col][0];
+    }
+
+    const setHasQueen = (square, hasQueen) => {
+        square[1] = hasQueen;
+    }
+
+    const setChessSquareData = (row, col, { color, hasPlacedQueen, hasToRemoveQueen }) => {
+        board[row][col] = [color, hasPlacedQueen, hasToRemoveQueen];
+    }
+
     const showNoMoreVariantsAlert = () => {
         alert("No more variants!");
+    }
+
+    const getChessSquareClass = (rowIndex, squareColor) => {
+        return rowIndex === 0 && !isPlacingQueens
+        ? `chessCellSelectable ${squareColor}`
+        : `chessCell ${squareColor}`;
     }
 
     return (
@@ -215,13 +239,11 @@ export function EightQueens() {
                                     rowArray.map(([cellColor, hasQueen, showRed], colIndex) => {
                                         return <div
                                             onClick={() => clickBoardCell(rowIndex, colIndex)}
-                                            className={rowIndex === 0
-                                                ? `chessCellSelectable ${cellColor}`
-                                                : `chessCell ${cellColor}`}
+                                            className={getChessSquareClass(rowIndex, cellColor)}
                                             key={colIndex}
                                             style={{ color: `${cellColor === WhiteCell ? 'black' : 'white'}` }}
                                         >
-                                            {hasQueen ? <span className={showRed ? 'redQueen' : ''}>&#9813;</span> : ''}
+                                            {hasQueen ? <span className={showRed ? 'redQueen' : ''}>&#9813;</span> : <></>}
                                         </div>
                                     })
                                 }
