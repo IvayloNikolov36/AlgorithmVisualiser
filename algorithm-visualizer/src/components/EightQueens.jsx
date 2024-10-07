@@ -3,17 +3,20 @@ import { WhiteCell } from "../constants/board-constants";
 import { generateBoard } from "../functions/chess-board-functions";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
 import { cloneDeep } from "lodash";
-import { ButtonGroup, Button, ToggleButton } from "react-bootstrap";
+import { ButtonGroup, Button, Form, ToggleButton, Row, Col } from "react-bootstrap";
 
 const BoardRows = 8;
 const BoardCols = 8;
-const WaitInSeconds = 0.5;
+const DefaultWaitInSeconds = 0.5;
+const RangeStep = 25;
 
 export function EightQueens() {
 
     const [board, setBoard] = useState([]);
     const [animateAlgorithm, setAnimateAlgorithm] = useState(false);
     const [isPlacingQueens, setIsPlacingQueeens] = useState(false);
+    const [rangeValue, setRangeValue] = useState(50);
+    const animationSpeed = useRef(DefaultWaitInSeconds);
     const placedQueens = useRef([]);
     const attackedHorizontals = useRef([]);
     const attackedVerticals = useRef([]);
@@ -93,7 +96,7 @@ export function EightQueens() {
         placedQueens.current.push([row, col]);
         setAttackedPaths(placedQueens.current);
         if (animateAlgorithm) {
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(animationSpeed.current);
         }
     }
 
@@ -106,7 +109,7 @@ export function EightQueens() {
                 queenCol,
                 { color: cellColor, hasPlacedQueen: true, hasToRemoveQueen: true });
             setBoard(cloneDeep(board));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(animationSpeed.current);
         }
 
         setChessSquareData(
@@ -190,6 +193,27 @@ export function EightQueens() {
         return !isRowAttacked && !isColAttacked && !isLeftDiagonalAttacked && !isRightDiagonalAttacked;
     }
 
+    const setAnimationSpeed = (speed) => {
+        setRangeValue(speed);
+
+        let seconds = 0;
+        if (speed === 0) {
+            seconds = 1.5;
+        } else if (speed > 0 && speed <= RangeStep) {
+            seconds = 1;
+        } else if (speed > RangeStep && speed < RangeStep * 2) {
+            seconds = 0.7;
+        } else if (speed === RangeStep * 2) {
+            seconds = DefaultWaitInSeconds;
+        } else if (speed > RangeStep * 2 && speed <= RangeStep * 3) {
+            seconds = 0.3;
+        } else {
+            seconds = 0.1;
+        }
+
+        animationSpeed.current = seconds;
+    }
+
     const getSquareColor = (row, col) => {
         return board[row][col][0];
     }
@@ -208,13 +232,13 @@ export function EightQueens() {
 
     const getChessSquareClass = (rowIndex, squareColor) => {
         return rowIndex === 0 && !isPlacingQueens
-        ? `chessCellSelectable ${squareColor}`
-        : `chessCell ${squareColor}`;
+            ? `chessCellSelectable ${squareColor}`
+            : `chessCell ${squareColor}`;
     }
 
     return (
         <div className="container">
-            <div className="d-flex justify-content-center py-2">
+            <div className="d-flex justify-content-center gap-5 py-2">
                 <ButtonGroup>
                     <Button onClick={placeQueens} disabled={isPlacingQueens} variant="outline-primary">
                         Place Queens
@@ -225,11 +249,31 @@ export function EightQueens() {
                         variant="outline-primary"
                         checked={animateAlgorithm}
                         value="1"
+                        disabled={isPlacingQueens}
                         onChange={(e) => setAnimateAlgorithm(e.currentTarget.checked)}
-                    >Animate
+                    > Animate
                     </ToggleButton>
                 </ButtonGroup>
+                {
+                    animateAlgorithm &&
+                    <div className="d-flex">
+                        <Form.Group as={Row}>
+                            <Form.Label column sm="4">
+                                Speed
+                            </Form.Label>
+                            <Col sm="8" className="align-self-end">
+                                <Form.Range
+                                    value={rangeValue}
+                                    onChange={(e) => setAnimationSpeed(e.target.value)}
+                                    disabled={isPlacingQueens}
+                                    step={RangeStep}
+                                />
+                            </Col>
+                        </Form.Group>
+                    </div>
+                }
             </div>
+
             <div className="d-flex justify-content-center mt-3">
                 <div className="chessBorder">
                     {
