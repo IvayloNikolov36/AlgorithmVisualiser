@@ -2,25 +2,40 @@ import { useEffect, useRef, useState } from 'react';
 import { cloneDeep, shuffle } from 'lodash';
 import { Cell } from '../models/cell';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
-import { StartCell, EndCell, PathCell, WallCell, EmptyCell } from '../constants/maze-constants';
-import '../App.css';
-import { ButtonGroup, Button } from 'react-bootstrap';
+import { DefaultWaitInSeconds, EmptyCell, HeightSize, StartCell, EndCell, PathCell, RangeStep, WallCell, WidthSize } from '../constants/maze-constants';
+import { ButtonGroup, Button, Col, Form, Row } from 'react-bootstrap';
 
-const WaitSeconds = 0.15;
-const WidthSize = 21;
-const HeightSize = 15;
 
 export function MazeMatrix() {
 
     const [matrix, setMatrix] = useState([]);
-    const isEndReached = useRef(false);
+    const [rangeValue, setRangeValue] = useState(50);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isEndReached, setIsEndReached] = useState(false);
+    const endReached = useRef(false);
+    const animationSpeed = useRef(DefaultWaitInSeconds);
 
     useEffect(() => {
-        refreshMaze();
+        generateOtherMaze();
     }, []);
 
-    const refreshMaze = () => {
+    const generateOtherMaze = () => {
+        setIsEndReached(false);
+        endReached.current = false;
         setMatrix(cloneDeep(generateMaze(HeightSize, WidthSize)));
+    }
+
+    const clearMaze = () => {
+        setIsEndReached(false);
+        endReached.current = false;
+        debugger;
+        const clearedMatrix = matrix.map(matrixRow => matrixRow.map(cell => {
+            if (cell === PathCell) {
+                return EmptyCell;
+            }
+            return cell;
+        }));
+        setMatrix(cloneDeep(clearedMatrix));
     }
 
     const generateMaze = (rows, cols) => {
@@ -59,6 +74,7 @@ export function MazeMatrix() {
     }
 
     const startBFS = async () => {
+        setIsProcessing(true);
 
         const visitedCells = await breadthFirstSearch(0, 0);
 
@@ -71,14 +87,21 @@ export function MazeMatrix() {
         });
 
         setMatrix(cloneDeep(matrix));
+
+        setIsEndReached(true);
+        setIsProcessing(false);
     }
 
     const startDFS = async () => {
+        setIsProcessing(true);
+
         const visitedCells = [];
         const cellsToUnmark = [];
         await depthFirstSearch(0, 0, visitedCells, cellsToUnmark, true);
         unStepCells(cellsToUnmark);
         setMatrix(cloneDeep(matrix));
+
+        setIsProcessing(false);
     }
 
     const depthFirstSearch = async (
@@ -89,12 +112,13 @@ export function MazeMatrix() {
         isStartCell = false) => {
 
         if (isEndCell(startRow, startCol)) {
-            isEndReached.current = true;
+            endReached.current = true;
+            setIsEndReached(true);
             return;
         }
 
         if (!isStartCell) {
-            await setTimeOutAfter(WaitSeconds);
+            await setTimeOutAfter(animationSpeed.current);
             stepOnCell(startRow, startCol);
             visitedCells.push([startRow, startCol]);
         }
@@ -107,14 +131,14 @@ export function MazeMatrix() {
 
             if (canStepOnCell(cellRow, cellCol, visitedCells)) {
 
-                if (isEndReached.current) {
+                if (endReached.current) {
                     return;
                 }
 
                 emptyCells++;
                 await depthFirstSearch(cellRow, cellCol, visitedCells, cellsToUnmark, false);
 
-                if (isEndReached.current) {
+                if (endReached.current) {
                     return;
                 }
 
@@ -125,7 +149,7 @@ export function MazeMatrix() {
             }
         }
 
-        if (emptyCells === 0 && !isEndReached.current) {
+        if (emptyCells === 0 && !endReached.current) {
             cellsToUnmark.push([startRow, startCol]);
         }
     }
@@ -171,7 +195,7 @@ export function MazeMatrix() {
             }
 
             if (!isStartCell(row, col)) {
-                await setTimeOutAfter(WaitSeconds);
+                await setTimeOutAfter(animationSpeed.current);
                 stepOnCell(row, col);
                 visited.push(cell);
             }
@@ -229,14 +253,73 @@ export function MazeMatrix() {
         return matrix[row][col] === StartCell;
     }
 
+    const setAnimationSpeed = (speed) => {
+        const speedValue = parseInt(speed);
+
+        setRangeValue(speedValue);
+
+        let seconds = 0;
+
+        if (speedValue === 0) {
+            seconds = 0.65;
+        } else if (speedValue > 0 && speedValue <= RangeStep) {
+            seconds = 0.45;
+        } else if (speedValue > RangeStep && speedValue < RangeStep * 2) {
+            seconds = 0.25;
+        } else if (speedValue === RangeStep * 2) {
+            seconds = DefaultWaitInSeconds;
+        } else if (speedValue > RangeStep * 2 && speedValue <= RangeStep * 3) {
+            seconds = 0.1;
+        } else {
+            seconds = 0;
+        }
+
+        animationSpeed.current = seconds;
+    }
+
     return (
         <div className="container-fluid">
-            <div className="d-flex justify-content-center my-3">
+            <div className="d-flex justify-content-center gap-5 my-3">
                 <ButtonGroup>
-                    <Button onClick={startBFS} variant="outline-primary">BFS</Button>
-                    <Button onClick={refreshMaze} variant="outline-primary">Refresh Maze</Button>
-                    <Button onClick={startDFS} variant="outline-primary">DFS</Button>
+                    <Button
+                        onClick={startBFS}
+                        disabled={isProcessing || isEndReached}
+                        variant="primary"
+                    > BFS
+                    </Button>
+                    <Button
+                        onClick={generateOtherMaze}
+                        disabled={isProcessing}
+                        variant="outline-primary"
+                    > Generate Other Maze
+                    </Button>
+                    <Button
+                        onClick={clearMaze}
+                        disabled={isProcessing}
+                        variant="outline-primary"
+                    > Clear Maze
+                    </Button>
+                    <Button
+                        onClick={startDFS}
+                        disabled={isProcessing || isEndReached}
+                        variant="primary"
+                    > DFS
+                    </Button>
                 </ButtonGroup>
+                <div className="d-flex">
+                    <Form.Group as={Row}>
+                        <Form.Label column sm="4">
+                            Speed
+                        </Form.Label>
+                        <Col sm="8" className="align-self-end">
+                            <Form.Range
+                                value={rangeValue}
+                                onChange={(e) => setAnimationSpeed(e.target.value)}
+                                step={RangeStep}
+                            />
+                        </Col>
+                    </Form.Group>
+                </div>
             </div>
             {
                 matrix.map((row, rowIndex) => {
