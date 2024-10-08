@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "../models/card";
 import { CardSuitEnum } from "../enums/card-suit.enum";
-import { cloneDeep, random } from "lodash";
-import { Button, ButtonGroup, Dropdown, DropdownButton } from 'react-bootstrap';
 import {
     BubbleSort,
     InsertionSort,
@@ -11,10 +9,12 @@ import {
     SelectionSort,
     CardsContainer
 } from "./sorting";
-import { CardAttributelabel, CardsCount, EmptyLabel, WaitInSeconds } from "../constants/sorting-algorithms-constants";
+import { CardAttributelabel, CardsCount, DefaultRangeValue, EmptyLabel, DefaultWaitInSeconds, RangeStep } from "../constants/sorting-algorithms-constants";
 import { SortingAlgorithmEnum } from "../enums/sorting-algorithm.enum";
 import { setAttribute } from "../functions/sorting-algorithms-functions";
 import { setTimeOutAfter } from "../helpers/thread-sleep";
+import { cloneDeep, random } from "lodash";
+import { Button, ButtonGroup, Col, Dropdown, DropdownButton, Form, Row } from 'react-bootstrap';
 
 export function SortingAlgorithms() {
 
@@ -22,6 +22,8 @@ export function SortingAlgorithms() {
     const [unsortedCards, setUnsortedCards] = useState([]);
     const [selectedSortAlgorithm, setSelectedSortAlgorithm] = useState(null);
     const [isSorting, setIsSorting] = useState(false);
+    const [rangeValue, setRangeValue] = useState(DefaultRangeValue);
+    const [animationSpeed, setAnimationSpeed] = useState(DefaultWaitInSeconds);
 
     useEffect(() => {
         const initialCards = createCards();
@@ -75,7 +77,7 @@ export function SortingAlgorithms() {
         cards[fromIndex].showRightSwapArrow = true;
         cards[toIndex].showLeftSwapArrow = true;
         setCards(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(DefaultWaitInSeconds);
     }
 
     const revert = () => {
@@ -130,6 +132,29 @@ export function SortingAlgorithms() {
         ];
     }
 
+    const changeAnimationSpeed = (speed) => {
+        const speedValue = parseInt(speed);
+
+        setRangeValue(speedValue);
+
+        let seconds = 0;
+        if (speedValue === 0) {
+            seconds = 1;
+        } else if (speedValue > 0 && speedValue <= RangeStep) {
+            seconds = 0.85;
+        } else if (speedValue > RangeStep && speedValue < RangeStep * 2) {
+            seconds = 0.7;
+        } else if (speedValue === DefaultRangeValue) {
+            seconds = DefaultWaitInSeconds;
+        } else if (speedValue > RangeStep * 2 && speedValue <= RangeStep * 3) {
+            seconds = 0.4;
+        } else {
+            seconds = 0.2;
+        }
+
+        setAnimationSpeed(seconds);
+    }
+
     const renderSelectedAlgorithm = () => {
         if (!isSorting) {
             return <CardsContainer cardElements={cards} />;
@@ -137,15 +162,15 @@ export function SortingAlgorithms() {
 
         switch (selectedSortAlgorithm) {
             case SortingAlgorithmEnum.BubbleSort:
-                return (<BubbleSort elements={cards} swap={swap} endSorting={endSorting} />);
+                return (<BubbleSort elements={cards} swap={swap} waitInSeconds={animationSpeed} endSorting={endSorting} />);
             case SortingAlgorithmEnum.QuickSort:
-                return (<QuickSort elements={cards} swap={swap} endSorting={endSorting} />);
+                return (<QuickSort elements={cards} swap={swap} waitInSeconds={animationSpeed} endSorting={endSorting} />);
             case SortingAlgorithmEnum.SelectionSort:
-                return (<SelectionSort elements={cards} swap={swap} endSorting={endSorting} />);
+                return (<SelectionSort elements={cards} swap={swap} waitInSeconds={animationSpeed} endSorting={endSorting} />);
             case SortingAlgorithmEnum.InsertionSort:
-                return (<InsertionSort elements={cards} endSorting={endSorting} />);
+                return (<InsertionSort elements={cards} waitInSeconds={animationSpeed} endSorting={endSorting} />);
             case SortingAlgorithmEnum.MergeSort:
-                return (<MergeSort elements={cards} endSorting={endSorting} />);
+                return (<MergeSort elements={cards} waitInSeconds={animationSpeed} endSorting={endSorting} />);
             default: return;
         }
     }
@@ -175,6 +200,20 @@ export function SortingAlgorithms() {
                     disabled={isSorting || selectedSortAlgorithm === null}
                 > Start Algorithm
                 </Button>
+                <div className="d-flex">
+                    <Form.Group as={Row}>
+                        <Form.Label column sm="4">
+                            Speed
+                        </Form.Label>
+                        <Col sm="8" className="align-self-end">
+                            <Form.Range
+                                value={rangeValue}
+                                onChange={(e) => changeAnimationSpeed(e.target.value)}
+                                step={RangeStep}
+                            />
+                        </Col>
+                    </Form.Group>
+                </div>
                 <ButtonGroup>
                     <Button
                         onClick={generateNewCards}

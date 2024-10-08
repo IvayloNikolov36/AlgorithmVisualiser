@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../../helpers/thread-sleep";
 import {
     CardAttributeSorted,
@@ -8,15 +7,17 @@ import {
     InitialMinLabel,
     MinLabel,
     SwapLabel,
-    WaitInSeconds,
+    DefaultWaitInSeconds,
     EmptyLabel
 } from "../../constants/sorting-algorithms-constants";
 import { setAttribute, setCardSorted } from "../../functions/sorting-algorithms-functions";
 import { CardsContainer } from "./CardsContainer";
+import { cloneDeep } from "lodash";
 
-export function SelectionSort({ elements, swap, endSorting }) {
+export function SelectionSort({ elements, swap, waitInSeconds, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
+    const wait = useRef(DefaultWaitInSeconds);
     const isSorting = useRef(false);
 
     useEffect(() => {
@@ -31,6 +32,10 @@ export function SelectionSort({ elements, swap, endSorting }) {
         }
     }, [cardElements])
 
+    useEffect(() => {
+        wait.current = waitInSeconds;
+    }, [waitInSeconds])
+
     const sort = async () => {
         isSorting.current = true;
 
@@ -43,13 +48,13 @@ export function SelectionSort({ elements, swap, endSorting }) {
 
             setAttribute([cardElements[minValueIndex]], CardAttributelabel, MinLabel);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             for (let index = iteration + 1; index < cardElements.length; index++) {
 
                 setAttribute([cardElements[index]], CardAttributeSelected, true);
                 setCardElements(cloneDeep(cardElements));
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
 
                 const currentValue = cardElements[index].value;
                 if (currentValue < minValue) {
@@ -62,7 +67,7 @@ export function SelectionSort({ elements, swap, endSorting }) {
 
                 setAttribute([cardElements[index]], CardAttributeSelected, false);
                 setCardElements(cloneDeep(cardElements));
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
             }
 
             if (initialMinValueIndex !== minValueIndex) {
@@ -71,14 +76,14 @@ export function SelectionSort({ elements, swap, endSorting }) {
                 await swap(cardElements, initialMinValueIndex, minValueIndex);
                 setCardElements(cloneDeep(cardElements));
                 setAttribute([cardElements[initialMinValueIndex], cardElements[minValueIndex]], CardAttributelabel, EmptyLabel);
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
             } else {
                 setAttribute([cardElements[initialMinValueIndex]], CardAttributelabel, EmptyLabel);
             }
 
             setCardSorted(cardElements[initialMinValueIndex]);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             iteration++;
         }
@@ -86,11 +91,11 @@ export function SelectionSort({ elements, swap, endSorting }) {
         setAttribute(cardElements, CardAttributelabel, EmptyLabel);
         setCardSorted(cardElements[cardElements.length - 1]);
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         setAttribute(cardElements, CardAttributeSorted, false);
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         isSorting.current = false;
         endSorting(cardElements);

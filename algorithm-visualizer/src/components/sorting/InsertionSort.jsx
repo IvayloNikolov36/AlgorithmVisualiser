@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { cloneDeep } from 'lodash';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import { Card } from '../../models/card';
-import { CardAttributeSorted, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
+import { CardAttributeSorted, DefaultWaitInSeconds } from "../../constants/sorting-algorithms-constants";
 import { createEmptyCards, setAttribute } from '../../functions/sorting-algorithms-functions';
 import { CardsContainer } from './CardsContainer';
 import { AuxCardsContainer } from './AuxCardsContainer';
+import { cloneDeep } from 'lodash';
 
-export function InsertionSort({ elements, endSorting }) {
+
+export function InsertionSort({ elements, waitInSeconds, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [cardsField, setCardsField] = useState([]);
     const nullCard = useRef(new Card(null, null));
+    const wait = useRef(DefaultWaitInSeconds);
     const isSorting = useRef(false);
 
     useEffect(() => {
@@ -27,6 +29,10 @@ export function InsertionSort({ elements, endSorting }) {
         }
     }, [cardElements])
 
+    useEffect(() => {
+        wait.current = waitInSeconds;
+    }, [waitInSeconds])
+
     const sort = async () => {
         let index = 1;
 
@@ -34,7 +40,7 @@ export function InsertionSort({ elements, endSorting }) {
 
             setAttribute([cardElements[index - 1]], CardAttributeSorted, true);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             const currentValue = cardElements[index].value;
             const previousValue = cardElements[index - 1].value;
@@ -44,11 +50,11 @@ export function InsertionSort({ elements, endSorting }) {
                 const extracted = cardElements[index];
                 cardElements[index] = nullCard.current;
                 setCardElements(cloneDeep(cardElements));
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
 
                 cardsField[index] = extracted;
                 setCardsField(cloneDeep(cardsField));
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
 
                 await moveForward(cardElements, index - 1);
 
@@ -62,7 +68,7 @@ export function InsertionSort({ elements, endSorting }) {
                         cardsField[index] = nullCard.current;
                         setCardsField(cloneDeep(cardsField));
                         setCardElements(cloneDeep(cardElements));
-                        await setTimeOutAfter(WaitInSeconds);
+                        await setTimeOutAfter(wait.current);
                         break;
                     }
                     await moveForward(cardElements, insertIndex - 1);
@@ -75,7 +81,7 @@ export function InsertionSort({ elements, endSorting }) {
 
         setAttribute(cardElements, CardAttributeSorted, false);
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         endSorting(cardElements);
     }
@@ -83,7 +89,7 @@ export function InsertionSort({ elements, endSorting }) {
     const moveForward = async (cards, index) => {
         cards[index].showRightSwapArrow = true;
         setCardElements(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         const temp = cards[index];
         cards[index] = cards[index + 1];
@@ -91,7 +97,7 @@ export function InsertionSort({ elements, endSorting }) {
 
         cards[index + 1].showRightSwapArrow = false;
         setCardElements(cloneDeep(cards));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
     }
 
     return (

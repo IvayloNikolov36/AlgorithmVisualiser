@@ -8,15 +8,16 @@ import {
     FirstLabel,
     SecondLabel,
     SwapLabel,
-    WaitInSeconds,
-    EmptyLabel
+    EmptyLabel,
+    DefaultWaitInSeconds
 } from "../../constants/sorting-algorithms-constants";
 import { setAttribute } from "../../functions/sorting-algorithms-functions";
 import { CardsContainer } from "./CardsContainer";
 
-export function BubbleSort({ elements, swap, endSorting }) {
+export function BubbleSort({ elements, swap, waitInSeconds, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
+    const wait = useRef(DefaultWaitInSeconds);
     const isSorting = useRef(false);
 
     useEffect(() => {
@@ -30,6 +31,10 @@ export function BubbleSort({ elements, swap, endSorting }) {
             sort();
         }
     }, [cardElements])
+
+    useEffect(() => {
+        wait.current = waitInSeconds;
+    }, [waitInSeconds])
 
     const sort = async () => {
 
@@ -47,12 +52,12 @@ export function BubbleSort({ elements, swap, endSorting }) {
                 if (cardsTraverseCount > 0 && !hasSwap) {
                     setAttribute(cardElements, CardAttributeSorted, false);
                     setCardElements(cloneDeep(cardElements));
-                    await setTimeOutAfter(WaitInSeconds);
+                    await setTimeOutAfter(wait.current);
                     break;
                 }
 
                 setAttribute([cardElements[lastUnsortedIndex]], CardAttributeSorted, true);
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
 
                 firstIndex = 0;
                 secondIndex = 1;
@@ -68,7 +73,7 @@ export function BubbleSort({ elements, swap, endSorting }) {
             setAttribute([firstCard], CardAttributelabel, FirstLabel);
             setAttribute([secondCard], CardAttributelabel, SecondLabel);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             if (firstCard.value > secondCard.value) {
                 setAttribute([firstCard, secondCard], CardAttributelabel, SwapLabel);
@@ -76,7 +81,7 @@ export function BubbleSort({ elements, swap, endSorting }) {
                 await swap(cardElements, firstIndex, secondIndex);
                 hasSwap = true;
 
-                await setTimeOutAfter(WaitInSeconds);
+                await setTimeOutAfter(wait.current);
             }
 
             if (firstIndex === 0 && secondIndex === lastUnsortedIndex) {
@@ -100,7 +105,7 @@ export function BubbleSort({ elements, swap, endSorting }) {
         setAttribute(cardsArr, CardAttributeSelected, false);
         setAttribute(cardsArr, CardAttributelabel, EmptyLabel);
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
     }
 
     return (

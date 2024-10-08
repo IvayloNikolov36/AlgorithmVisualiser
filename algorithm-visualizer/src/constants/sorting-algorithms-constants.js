@@ -1,5 +1,5 @@
 export const CardsCount = 8;
-export const WaitInSeconds = 0.6;
+export const DefaultWaitInSeconds = 0.6;
 export const SwapLabel = 'Swap';
 export const StoreIndexLabel = 'Store Index';
 export const CardAttributelabel = 'label';
@@ -11,3 +11,5 @@ export const InitialMinLabel = 'Initial Min';
 export const FirstLabel = 'First';
 export const SecondLabel = 'Second';
 export const PivotLabel = 'Pivot';
+export const RangeStep = 25;
+export const DefaultRangeValue = 50;

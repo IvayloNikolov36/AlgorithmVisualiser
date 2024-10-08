@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { cloneDeep } from "lodash";
 import { setTimeOutAfter } from "../../helpers/thread-sleep";
 import {
     CardAttributeSorted,
@@ -9,15 +8,17 @@ import {
     PivotLabel,
     StoreIndexLabel,
     SwapLabel,
-    WaitInSeconds
+    DefaultWaitInSeconds
 } from "../../constants/sorting-algorithms-constants";
 import { setAttribute } from "../../functions/sorting-algorithms-functions";
 import { CardsContainer } from "./CardsContainer";
+import { cloneDeep } from "lodash";
 
-export function QuickSort({ elements, swap, endSorting }) {
+export function QuickSort({ elements, swap, waitInSeconds, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [sortingInfo, setSortingInfo] = useState('');
+    const wait = useRef(DefaultWaitInSeconds);
     const isSorting = useRef(false);
 
     useEffect(() => {
@@ -31,6 +32,10 @@ export function QuickSort({ elements, swap, endSorting }) {
             sort();
         }
     }, [cardElements])
+
+    useEffect(() => {
+        wait.current = waitInSeconds;
+    }, [waitInSeconds])
 
     const sort = async () => {
 
@@ -56,7 +61,7 @@ export function QuickSort({ elements, swap, endSorting }) {
         if (startIndex === endIndex) {
             setAttribute([cardElements[startIndex]], CardAttributeSorted, true);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
             return;
         }
 
@@ -66,14 +71,14 @@ export function QuickSort({ elements, swap, endSorting }) {
         setAttribute([cardElements[startIndex]], CardAttributelabel, PivotLabel);
         setSortingInfo(getStoreIndexLabel(storeIndex));
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         for (let currentCardIndex = startIndex + 1; currentCardIndex <= endIndex; currentCardIndex++) {
             const currentValue = cardElements[currentCardIndex].value;
 
             setAttribute([cardElements[currentCardIndex]], CardAttributeSelected, true);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             if (currentValue <= pivotValue) {
                 if (currentCardIndex !== storeIndex) {
@@ -84,7 +89,7 @@ export function QuickSort({ elements, swap, endSorting }) {
 
                     await swap(cardElements, storeIndex, currentCardIndex);
 
-                    await setTimeOutAfter(WaitInSeconds);
+                    await setTimeOutAfter(wait.current);
                 }
 
                 storeIndex++;
@@ -95,24 +100,24 @@ export function QuickSort({ elements, swap, endSorting }) {
 
             setAttribute([cardElements[currentCardIndex]], CardAttributeSelected, false);
             setCardElements(cloneDeep(cardElements));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
         }
 
         const sortedIndex = storeIndex - 1;
 
         setAttribute([cardElements[startIndex]], CardAttributelabel, `${PivotLabel} ${SwapLabel}`);
         setAttribute([cardElements[sortedIndex]], CardAttributelabel, `${StoreIndexLabel} - 1 ${SwapLabel}`);
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         await swap(cardElements, startIndex, sortedIndex);
 
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         setAttribute([cardElements[sortedIndex]], CardAttributeSorted, true);
         setAttribute([cardElements[sortedIndex]], CardAttributelabel, EmptyLabel);
 
         setCardElements(cloneDeep(cardElements));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         await sortPartition(startIndex, sortedIndex - 1);
         await sortPartition(sortedIndex + 1, endIndex);

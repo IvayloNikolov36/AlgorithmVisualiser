@@ -1,19 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { cloneDeep } from 'lodash';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import { Card } from '../../models/card';
-import { CardsCount, WaitInSeconds } from "../../constants/sorting-algorithms-constants";
+import { CardsCount, DefaultWaitInSeconds } from "../../constants/sorting-algorithms-constants";
 import { createEmptyCards, } from '../../functions/sorting-algorithms-functions';
 import { CardsContainer } from './CardsContainer';
 import { AuxCardsContainer } from './AuxCardsContainer';
+import { cloneDeep } from 'lodash';
 
-export function MergeSort({ elements, endSorting }) {
+
+export function MergeSort({ elements, waitInSeconds, endSorting }) {
 
     const [cardElements, setCardElements] = useState([]);
     const [cardsField, setCardsField] = useState([]);
     const cardsFieldRef = useRef([]);
     const aux = useRef([]);
     const nullCard = useRef(new Card(null, null));
+    const wait = useRef(DefaultWaitInSeconds);
     const isSorting = useRef(false);
 
     useEffect(() => {
@@ -28,6 +30,10 @@ export function MergeSort({ elements, endSorting }) {
             sort();
         }
     }, [cardElements])
+
+    useEffect(() => {
+        wait.current = waitInSeconds;        
+    }, [waitInSeconds]) 
 
     const sort = async () => {
         isSorting.current = true;
@@ -58,7 +64,7 @@ export function MergeSort({ elements, endSorting }) {
         const emptyCards = createEmptyCards(CardsCount);
         cardsFieldRef.current = emptyCards;
         setCardsField(emptyCards);
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         if (array[mid].value < array[mid + 1].value) {
 
@@ -68,7 +74,7 @@ export function MergeSort({ elements, endSorting }) {
             }
 
             setCardsField(cloneDeep(cardsFieldRef.current));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             for (let index = start; index <= end; index++) {
                 array[index] = cardsFieldRef.current[index];
@@ -76,7 +82,7 @@ export function MergeSort({ elements, endSorting }) {
             }
 
             setCardsField(cloneDeep(cardsFieldRef.current));
-            await setTimeOutAfter(WaitInSeconds);
+            await setTimeOutAfter(wait.current);
 
             return;
         }
@@ -89,7 +95,7 @@ export function MergeSort({ elements, endSorting }) {
         }
 
         setCardsField(cloneDeep(cardsFieldRef.current));
-        await setTimeOutAfter(WaitInSeconds);
+        await setTimeOutAfter(wait.current);
 
         let i = start;
         let j = mid + 1;
