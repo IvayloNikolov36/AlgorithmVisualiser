@@ -4,4 +4,5 @@ export const Routes = {
     Sorting: '/sorting',
     EightQueens: '/eight-queens',
     KnightsTour: '/knights-rout',
+    Prims: '/prims',
 }

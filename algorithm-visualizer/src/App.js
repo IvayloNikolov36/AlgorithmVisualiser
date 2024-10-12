@@ -6,6 +6,7 @@ import {
   Header,
   KnightsTour,
   MazeMatrix,
+  Prims,
   SortingAlgorithms
 }
   from './components';
@@ -22,6 +23,7 @@ function App() {
         <Route path={routes.TowerOfHanoi} element={<HanoiTower />} />
         <Route path={routes.Sorting} element={<SortingAlgorithms />} />
         <Route path={routes.KnightsTour} element={<KnightsTour />} />
+        <Route path={routes.Prims} element={<Prims />} />
       </Routes>
     </Router>
   );

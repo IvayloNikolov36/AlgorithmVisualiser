@@ -255,3 +255,10 @@
 .knightsTourTitle {
   height: 2.375rem;
 }
+
+
+/* --- Graphs Algorithms --- */
+
+#cy {
+  height: 31.25rem;
+}

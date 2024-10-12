@@ -11,6 +11,7 @@ export function Header() {
                 <NavLink to={routes.TowerOfHanoi}>Tower Of Hanoi</NavLink>
                 <NavLink to={routes.Sorting}>Sorting Algorithms</NavLink>
                 <NavLink to={routes.KnightsTour}>Knight's Tour</NavLink>
+                <NavLink to={routes.Prims}>Prim's</NavLink>
             </div>
         </div>
     );
