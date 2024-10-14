@@ -1,13 +1,91 @@
+import { useEffect, useRef } from 'react';
+import { Button, ButtonGroup } from 'react-bootstrap';
+import { Edge, Node } from '../models';
+import PriorityQueue from 'js-priority-queue/priority-queue';
 import cytoscape from 'cytoscape';
-import { useEffect } from 'react';
 
 const NodesGroup = 'nodes';
 const EdgesGroup = 'edges';
+const MarkedColor = '#FFFF00';
 
 export function Prims() {
 
-    useEffect(() => {
+    const cy = useRef(null);
 
+    const Nodes = [
+        new Node('a'),
+        new Node('b'),
+        new Node('c'),
+        new Node('d'),
+        new Node('e'),
+        new Node('f')
+    ];
+
+    const Edges = [
+        new Edge('ab', Nodes[0], Nodes[1], 4),
+        new Edge('ac', Nodes[0], Nodes[2], 5),
+        new Edge('ad', Nodes[0], Nodes[3], 9),
+        new Edge('bd', Nodes[1], Nodes[3], 2),
+        new Edge('cd', Nodes[2], Nodes[3], 20),
+        new Edge('ce', Nodes[2], Nodes[4], 7),
+        new Edge('ed', Nodes[4], Nodes[3], 8),
+        new Edge('ef', Nodes[4], Nodes[5], 12)
+    ];
+
+    useEffect(() => {
+        cy.current = initializeCytoscape();
+    }, [])
+
+    const startPrimsAlgorithm = () => {
+
+        const spanningTreeEdges = [];
+        const markedNodes = [];
+        const comparator = function (a, b) { return a.weight - b.weight };
+        let priorityQueue = new PriorityQueue({ comparator });
+
+        let currentNode = Nodes[0];
+        let nodeEdges = getNodeEdges(currentNode);
+        enqueueElements(priorityQueue, nodeEdges);
+
+        while (priorityQueue.length > 0) {
+            markNode(currentNode);
+            markedNodes.push(currentNode);
+
+            const selectedEdge = priorityQueue.dequeue();
+            if (markedNodes.includes(selectedEdge.target)) {
+                continue;
+            }
+
+            spanningTreeEdges.push(selectedEdge);
+            markEdge(selectedEdge);
+
+            currentNode = selectedEdge.target;
+            nodeEdges = getNodeEdges(currentNode)
+                .filter(edge => !spanningTreeEdges.includes(edge))
+                .filter(edge => !priorityQueue.priv.data.includes(edge));
+
+            enqueueElements(priorityQueue, nodeEdges);
+        }
+    }
+
+
+    const markNode = (node) => {
+        cy.current.nodes(`[id = '${node.name}']`).style('background-color', MarkedColor);
+    }
+
+    const markEdge = (edge) => {
+        cy.current.edges(`[id = '${edge.name}']`).style('line-color', MarkedColor);
+    }
+
+    const getNodeEdges = (node) => {
+        return Edges.filter(edge => edge.source === node || edge.target === node);
+    }
+
+    const enqueueElements = (queue, elements) => {
+        elements.forEach(el => queue.queue(el));
+    }
+
+    const initializeCytoscape = () => {
         const cy = cytoscape({
             container: document.getElementById('cy'),
             elements: getElements(),
@@ -16,38 +94,18 @@ export function Prims() {
             zoom: 1
         });
 
-        // console.log( cy.nodes()[1].data("id")); // b
-        //console.log(cy.nodes())
-
-        cy.nodes('[id = "a"]').style('background-color', '#ffff00');
-        cy.edges('[id = "ab"]')
-            .style('line-color', '#ffff00')
-            .style('target-arrow-color', '#ffff00');
-
-        cy.on('tap', 'node', function (e) {
-            var ele = e.target;
-            if (cy.elements('node')) {
-                cy.elements().difference(ele.outgoers());
-                ele.addClass('highlight').outgoers().addClass('highlight');
-            }
-        });
-
-        cy.on('cxttap', 'node', function (e) {
-            var ele = e.target;
-            ele.removeClass('highlight').outgoers().removeClass('highlight');
-        });
-
-    }, [])
+        return cy;
+    }
 
     const getOptions = () => {
         return {
-            name: 'breadthfirst',
+            name: 'preset',
             fit: true, // whether to fit the viewport to the graph
             directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
             padding: 60, // padding on fit
             circle: false, // put depths in concentric circles if true, put depths top down if false
             grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
-            spacingFactor: 1.35, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
+            spacingFactor: 0.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
             boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
             avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
             nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
@@ -64,21 +122,27 @@ export function Prims() {
     }
 
     const getElements = () => {
+
+        const edgesElements = Edges.map(edge => {
+            return {
+                group: EdgesGroup,
+                data: {
+                    id: edge.name,
+                    source: edge.source.name,
+                    target: edge.target.name,
+                    weight: edge.weight
+                }
+            }
+        });
+
         return [
-            { group: NodesGroup, data: { id: 'a' } },
-            { group: NodesGroup, data: { id: 'b' } },
-            { group: NodesGroup, data: { id: 'c' } },
-            { group: NodesGroup, data: { id: 'd' } },
-            { group: NodesGroup, data: { id: 'e' } },
-            { group: NodesGroup, data: { id: 'f' } },
-            { group: EdgesGroup, data: { id: 'ab', source: 'a', target: 'b' } },
-            { group: EdgesGroup, data: { id: 'ac', source: 'a', target: 'c' } },
-            { group: EdgesGroup, data: { id: 'ad', source: 'a', target: 'd' } },
-            { group: EdgesGroup, data: { id: 'bd', source: 'b', target: 'd' } },
-            { group: EdgesGroup, data: { id: 'cd', source: 'c', target: 'd' } },
-            { group: EdgesGroup, data: { id: 'ce', source: 'c', target: 'e' } },
-            { group: EdgesGroup, data: { id: 'ed', source: 'e', target: 'd' } },
-            { group: EdgesGroup, data: { id: 'ef', source: 'e', target: 'f' } },
+            { group: NodesGroup, data: { id: Nodes[0].name }, position: { x: 150, y: 10 } },
+            { group: NodesGroup, data: { id: Nodes[1].name }, position: { x: 0, y: 400 } },
+            { group: NodesGroup, data: { id: Nodes[2].name }, position: { x: 500, y: 10 } },
+            { group: NodesGroup, data: { id: Nodes[3].name }, position: { x: 650, y: 400 } },
+            { group: NodesGroup, data: { id: Nodes[4].name }, position: { x: 900, y: 110 } },
+            { group: NodesGroup, data: { id: Nodes[5].name }, position: { x: 1200, y: 250 } },
+            ...edgesElements
         ]
     }
 
@@ -98,9 +162,14 @@ export function Prims() {
                 style: {
                     'width': 5,
                     'line-color': '#ccc',
+                    // 'line-style': 'dashed',
                     'target-arrow-color': '#ccc',
                     // 'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier'
+                    'curve-style': 'bezier',
+                    'label': 'data(weight)',
+                    // 'source-label': 'data(source)',
+                    'text-margin-x': 5,
+                    'text-margin-y': 20
                 }
             },
             {
@@ -142,7 +211,17 @@ export function Prims() {
     }
 
     return (
-        <div id="cy" className="d-flex w-100">
-        </div>
+        <>
+            <div className="d-flex justify-content-center mt-2">
+                <ButtonGroup>
+                    <Button onClick={startPrimsAlgorithm} variant="primary">
+                        Find Min Spanning Tree
+                    </Button>
+                </ButtonGroup>
+            </div>
+            <div id="cy" className="d-flex w-100">
+            </div>
+        </>
+
     );
 }
