@@ -1,65 +1,75 @@
-import { useEffect, useRef } from 'react';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
+import { setTimeOutAfter } from '../helpers/thread-sleep';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 import cytoscape from 'cytoscape';
+import { Button, Form, Modal } from 'react-bootstrap';
+
 
 const NodesGroup = 'nodes';
 const EdgesGroup = 'edges';
 const MarkedColor = '#FFFF00';
+const WaitInSeconds = 0.5;
 
 export function Prims() {
 
+    const [showModal, setShowModal] = useState(false);
     const cy = useRef(null);
 
-    const Nodes = [
-        new Node('a'),
-        new Node('b'),
-        new Node('c'),
-        new Node('d'),
-        new Node('e'),
-        new Node('f')
-    ];
+    const nodes = useRef([
+        new Node('a', 150, 10),
+        new Node('b', 0, 400),
+        new Node('c', 500, 10),
+        new Node('d', 650, 400),
+        new Node('e', 900, 110),
+        new Node('f', 1200, 250)
+    ]);
 
-    const Edges = [
-        new Edge('ab', Nodes[0], Nodes[1], 4),
-        new Edge('ac', Nodes[0], Nodes[2], 5),
-        new Edge('ad', Nodes[0], Nodes[3], 9),
-        new Edge('bd', Nodes[1], Nodes[3], 2),
-        new Edge('cd', Nodes[2], Nodes[3], 20),
-        new Edge('ce', Nodes[2], Nodes[4], 7),
-        new Edge('ed', Nodes[4], Nodes[3], 8),
-        new Edge('ef', Nodes[4], Nodes[5], 12)
-    ];
+    const edges = useRef([
+        new Edge('ab', nodes.current[0], nodes.current[1], 4),
+        new Edge('ac', nodes.current[0], nodes.current[2], 5),
+        new Edge('ad', nodes.current[0], nodes.current[3], 9),
+        new Edge('bd', nodes.current[1], nodes.current[3], 2),
+        new Edge('cd', nodes.current[2], nodes.current[3], 20),
+        new Edge('ce', nodes.current[2], nodes.current[4], 7),
+        new Edge('ed', nodes.current[4], nodes.current[3], 8),
+        new Edge('ef', nodes.current[4], nodes.current[5], 12)
+    ]);
 
     useEffect(() => {
-        cy.current = initializeCytoscape();
+        initializeCytoscape();
     }, [])
 
-    const startPrimsAlgorithm = () => {
+    const startPrimsAlgorithm = async () => {
 
         const spanningTreeEdges = [];
         const markedNodes = [];
         const comparator = function (a, b) { return a.weight - b.weight };
         let priorityQueue = new PriorityQueue({ comparator });
 
-        let currentNode = Nodes[0];
+        let currentNode = nodes.current[0];
+        markNode(currentNode);
+        markedNodes.push(currentNode);
         let nodeEdges = getNodeEdges(currentNode);
         enqueueElements(priorityQueue, nodeEdges);
 
         while (priorityQueue.length > 0) {
-            markNode(currentNode);
-            markedNodes.push(currentNode);
-
             const selectedEdge = priorityQueue.dequeue();
-            if (markedNodes.includes(selectedEdge.target)) {
+
+            // to avoid cycles
+            if (markedNodes.some(node => node.name === selectedEdge.source.name)
+                    && markedNodes.some(node => node.name === selectedEdge.target.name)) {
                 continue;
             }
 
+            await setTimeOutAfter(WaitInSeconds);
             spanningTreeEdges.push(selectedEdge);
             markEdge(selectedEdge);
+            await setTimeOutAfter(WaitInSeconds);
 
-            currentNode = selectedEdge.target;
+            currentNode = markedNodes.includes(selectedEdge.source) ? selectedEdge.target : selectedEdge.source;
+            markNode(currentNode);
+            markedNodes.push(currentNode);
             nodeEdges = getNodeEdges(currentNode)
                 .filter(edge => !spanningTreeEdges.includes(edge))
                 .filter(edge => !priorityQueue.priv.data.includes(edge));
@@ -67,7 +77,6 @@ export function Prims() {
             enqueueElements(priorityQueue, nodeEdges);
         }
     }
-
 
     const markNode = (node) => {
         cy.current.nodes(`[id = '${node.name}']`).style('background-color', MarkedColor);
@@ -78,7 +87,7 @@ export function Prims() {
     }
 
     const getNodeEdges = (node) => {
-        return Edges.filter(edge => edge.source === node || edge.target === node);
+        return edges.current.filter(edge => edge.source === node || edge.target === node);
     }
 
     const enqueueElements = (queue, elements) => {
@@ -86,7 +95,7 @@ export function Prims() {
     }
 
     const initializeCytoscape = () => {
-        const cy = cytoscape({
+        const cyto = cytoscape({
             container: document.getElementById('cy'),
             elements: getElements(),
             style: getStyles(),
@@ -94,7 +103,21 @@ export function Prims() {
             zoom: 1
         });
 
-        return cy;
+        cyto.on('free', 'node', (e) => {
+            let item = e.target;
+
+            const nodeData = item._private;
+            const nodeName = nodeData.data.id;
+            const x = nodeData.position.x;
+            const y = nodeData.position.y;
+            const index = nodes.current
+                .indexOf(nodes.current.filter(node => node.name === nodeName)[0]);
+            nodes.current[index] = new Node(nodeName, x, y);
+
+            initializeCytoscape();
+        });
+
+        cy.current = cyto;
     }
 
     const getOptions = () => {
@@ -123,7 +146,15 @@ export function Prims() {
 
     const getElements = () => {
 
-        const edgesElements = Edges.map(edge => {
+        const nodesElements = nodes.current.map(node => {
+            return {
+                group: NodesGroup,
+                data: { id: node.name },
+                position: { x: node.positionX, y: node.positionY }
+            }
+        });
+
+        const edgesElements = edges.current.map(edge => {
             return {
                 group: EdgesGroup,
                 data: {
@@ -135,15 +166,7 @@ export function Prims() {
             }
         });
 
-        return [
-            { group: NodesGroup, data: { id: Nodes[0].name }, position: { x: 150, y: 10 } },
-            { group: NodesGroup, data: { id: Nodes[1].name }, position: { x: 0, y: 400 } },
-            { group: NodesGroup, data: { id: Nodes[2].name }, position: { x: 500, y: 10 } },
-            { group: NodesGroup, data: { id: Nodes[3].name }, position: { x: 650, y: 400 } },
-            { group: NodesGroup, data: { id: Nodes[4].name }, position: { x: 900, y: 110 } },
-            { group: NodesGroup, data: { id: Nodes[5].name }, position: { x: 1200, y: 250 } },
-            ...edgesElements
-        ]
+        return [...nodesElements, ...edgesElements]
     }
 
     const getStyles = () => {
@@ -210,18 +233,94 @@ export function Prims() {
         ];
     }
 
+    const openModal = () => {
+        setShowModal(true);
+    }
+
+    const closeModal = () => {
+        setShowModal(false);
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        const sourceNodeName = e.target[1].value;
+        let sourceNode = findNode(sourceNodeName);
+
+        if (!sourceNode) {
+            sourceNode = new Node(sourceNodeName, 1200, 500);
+            nodes.current.push(sourceNode);
+        }
+
+        const targetNodeName = e.target[2].value;
+        let targetNode = findNode(targetNodeName);
+
+        if (!targetNode) {
+            targetNode = new Node(targetNodeName, 1200, 500);
+            nodes.current.push(targetNode);
+        }
+
+        const edgeName = e.target[0].value;
+        const weight = e.target[3].value;
+        const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
+        edges.current.push(newEdge);
+
+        initializeCytoscape();
+
+        closeModal();
+    }
+
+    const findNode = (name) => {
+        return nodes.current.filter(node => node.name === name)[0];
+    }
+
     return (
         <>
-            <div className="d-flex justify-content-center mt-2">
-                <ButtonGroup>
-                    <Button onClick={startPrimsAlgorithm} variant="primary">
-                        Find Min Spanning Tree
-                    </Button>
-                </ButtonGroup>
+            <div className="d-flex justify-content-center gap-5 mt-2">
+                <Button onClick={startPrimsAlgorithm} variant="primary">
+                    Find Min Spanning Tree
+                </Button>
+                <Button onClick={openModal} variant="outline-primary">
+                    Add Edge
+                </Button>
             </div>
+
+            <Modal show={showModal} onHide={closeModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add Edge</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form id="new-edge" onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Edge Name</Form.Label>
+                            <Form.Control placeholder="Enter edge name" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Source</Form.Label>
+                            <Form.Control placeholder="Enter source" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Target</Form.Label>
+                            <Form.Control placeholder="Enter target" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Weight</Form.Label>
+                            <Form.Control placeholder="Enter weight" />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeModal}>
+                        Close
+                    </Button>
+                    <Button variant="primary" type="submit" form="new-edge">
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <div id="cy" className="d-flex w-100">
             </div>
         </>
-
     );
 }
