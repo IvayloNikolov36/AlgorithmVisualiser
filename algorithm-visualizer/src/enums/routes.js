@@ -5,4 +5,5 @@ export const Routes = {
     EightQueens: '/eight-queens',
     KnightsTour: '/knights-rout',
     Prims: '/prims',
+    Dijkstras: '/dijkstras',
 }

@@ -1,92 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
-import  { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
-import PriorityQueue from 'js-priority-queue/priority-queue';
+import { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
 import cytoscape from 'cytoscape';
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 
-export function Prims() {
+export function Dijkstras() {
 
-    const [showModal, setShowModal] = useState(false);
     const cy = useRef(null);
 
     const nodes = useRef([
-        new Node('a', 150, 10),
-        new Node('b', 0, 400),
-        new Node('c', 500, 10),
-        new Node('d', 650, 400),
-        new Node('e', 900, 110),
-        new Node('f', 1200, 250)
+        new Node('0', 10, 210),
+        new Node('1', 950, 50),
+        new Node('2', 550, 450),
+        new Node('4', 500, 50),
+        new Node('5', 420, 270),
+        new Node('6', 220, 100),
+        new Node('7', 980, 400),
+        new Node('8', 200, 410),
+        new Node('9', 1200, 245),
+        new Node('11', 720, 200)
     ]);
 
     const edges = useRef([
-        new Edge('ab', nodes.current[0], nodes.current[1], 4),
-        new Edge('ac', nodes.current[0], nodes.current[2], 5),
-        new Edge('ad', nodes.current[0], nodes.current[3], 9),
-        new Edge('bd', nodes.current[1], nodes.current[3], 2),
-        new Edge('cd', nodes.current[2], nodes.current[3], 20),
-        new Edge('ce', nodes.current[2], nodes.current[4], 7),
-        new Edge('ed', nodes.current[4], nodes.current[3], 8),
-        new Edge('ef', nodes.current[4], nodes.current[5], 12)
+        new Edge('0-6', nodes.current[0], nodes.current[5], 10),
+        new Edge('0-8', nodes.current[0], nodes.current[7], 12),
+        new Edge('6-4', nodes.current[5], nodes.current[3], 17),
+        new Edge('6-5', nodes.current[5], nodes.current[4], 6),
+        new Edge('4-1', nodes.current[3], nodes.current[1], 20),
+        new Edge('4-11', nodes.current[3], nodes.current[9], 11),
+        new Edge('5-4', nodes.current[4], nodes.current[3], 5),
+        new Edge('5-11', nodes.current[4], nodes.current[9], 33),
+        new Edge('8-5', nodes.current[7], nodes.current[4], 3),
+        new Edge('8-2', nodes.current[7], nodes.current[2], 14),
+        new Edge('2-11', nodes.current[2], nodes.current[9], 9),
+        new Edge('2-7', nodes.current[2], nodes.current[6], 15),
+        new Edge('11-1', nodes.current[9], nodes.current[1], 6),
+        new Edge('11-7', nodes.current[9], nodes.current[6], 20),
+        new Edge('1-9', nodes.current[1], nodes.current[8], 5),
+        new Edge('1-7', nodes.current[1], nodes.current[6], 26),
+        new Edge('7-9', nodes.current[6], nodes.current[8], 3),
     ]);
 
     useEffect(() => {
         initializeCytoscape();
     }, [])
 
-    const startPrimsAlgorithm = async () => {
+    const startDijkstrasAlgorithms = () => {
 
-        const spanningTreeEdges = [];
-        const markedNodes = [];
-        const comparator = function (a, b) { return a.weight - b.weight };
-        let priorityQueue = new PriorityQueue({ comparator });
-
-        let currentNode = nodes.current[0];
-        markNode(currentNode);
-        markedNodes.push(currentNode);
-        let nodeEdges = getNodeEdges(currentNode);
-        enqueueElements(priorityQueue, nodeEdges);
-
-        while (priorityQueue.length > 0) {
-            const selectedEdge = priorityQueue.dequeue();
-
-            // to avoid cycles
-            if (markedNodes.some(node => node.name === selectedEdge.source.name)
-                    && markedNodes.some(node => node.name === selectedEdge.target.name)) {
-                continue;
-            }
-
-            await setTimeOutAfter(WaitInSeconds);
-            spanningTreeEdges.push(selectedEdge);
-            markEdge(selectedEdge);
-            await setTimeOutAfter(WaitInSeconds);
-
-            currentNode = markedNodes.includes(selectedEdge.source) ? selectedEdge.target : selectedEdge.source;
-            markNode(currentNode);
-            markedNodes.push(currentNode);
-            nodeEdges = getNodeEdges(currentNode)
-                .filter(edge => !spanningTreeEdges.includes(edge))
-                .filter(edge => !priorityQueue.priv.data.includes(edge));
-
-            enqueueElements(priorityQueue, nodeEdges);
-        }
-    }
-
-    const markNode = (node) => {
-        cy.current.nodes(`[id = '${node.name}']`).style('background-color', MarkedColor);
-    }
-
-    const markEdge = (edge) => {
-        cy.current.edges(`[id = '${edge.name}']`).style('line-color', MarkedColor);
-    }
-
-    const getNodeEdges = (node) => {
-        return edges.current.filter(edge => edge.source === node || edge.target === node);
-    }
-
-    const enqueueElements = (queue, elements) => {
-        elements.forEach(el => queue.queue(el));
     }
 
     const initializeCytoscape = () => {
@@ -110,6 +71,8 @@ export function Prims() {
             nodes.current[index] = new Node(nodeName, x, y);
 
             initializeCytoscape();
+
+            console.log(nodes);
         });
 
         cy.current = cyto;
@@ -150,6 +113,7 @@ export function Prims() {
         });
 
         const edgesElements = edges.current.map(edge => {
+            debugger;
             return {
                 group: EdgesGroup,
                 data: {
@@ -228,91 +192,13 @@ export function Prims() {
         ];
     }
 
-    const openModal = () => {
-        setShowModal(true);
-    }
-
-    const closeModal = () => {
-        setShowModal(false);
-    }
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const sourceNodeName = e.target[1].value;
-        let sourceNode = findNode(sourceNodeName);
-
-        if (!sourceNode) {
-            sourceNode = new Node(sourceNodeName, 1200, 500);
-            nodes.current.push(sourceNode);
-        }
-
-        const targetNodeName = e.target[2].value;
-        let targetNode = findNode(targetNodeName);
-
-        if (!targetNode) {
-            targetNode = new Node(targetNodeName, 1200, 500);
-            nodes.current.push(targetNode);
-        }
-
-        const edgeName = e.target[0].value;
-        const weight = e.target[3].value;
-        const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
-        edges.current.push(newEdge);
-
-        initializeCytoscape();
-
-        closeModal();
-    }
-
-    const findNode = (name) => {
-        return nodes.current.filter(node => node.name === name)[0];
-    }
-
     return (
         <>
             <div className="d-flex justify-content-center gap-5 mt-2">
-                <Button onClick={startPrimsAlgorithm} variant="primary">
-                    Find Min Spanning Tree
-                </Button>
-                <Button onClick={openModal} variant="outline-primary">
-                    Add Edge
+                <Button onClick={startDijkstrasAlgorithms} variant="primary">
+                    Find Shortest Path
                 </Button>
             </div>
-
-            <Modal show={showModal} onHide={closeModal}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add Edge</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form id="new-edge" onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3" controlId="formGroupEmail">
-                            <Form.Label>Edge Name</Form.Label>
-                            <Form.Control placeholder="Enter edge name" />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="formGroupEmail">
-                            <Form.Label>Source</Form.Label>
-                            <Form.Control placeholder="Enter source" />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="formGroupEmail">
-                            <Form.Label>Target</Form.Label>
-                            <Form.Control placeholder="Enter target" />
-                        </Form.Group>
-                        <Form.Group className="mb-3" controlId="formGroupEmail">
-                            <Form.Label>Weight</Form.Label>
-                            <Form.Control placeholder="Enter weight" />
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={closeModal}>
-                        Close
-                    </Button>
-                    <Button variant="primary" type="submit" form="new-edge">
-                        Save Changes
-                    </Button>
-                </Modal.Footer>
-            </Modal>
 
             <div id="cy" className="d-flex w-100">
             </div>

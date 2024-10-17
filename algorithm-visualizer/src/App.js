@@ -2,15 +2,16 @@ import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import {
   EightQueens,
+  Dijkstras,
   HanoiTower,
   Header,
   KnightsTour,
   MazeMatrix,
   Prims,
   SortingAlgorithms
-}
-  from './components';
+} from './components';
 import { Routes as routes } from './enums/routes';
+
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path={routes.Sorting} element={<SortingAlgorithms />} />
         <Route path={routes.KnightsTour} element={<KnightsTour />} />
         <Route path={routes.Prims} element={<Prims />} />
+        <Route path={routes.Dijkstras} element={<Dijkstras />} />
       </Routes>
     </Router>
   );
