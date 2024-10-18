@@ -108,6 +108,41 @@ export function Dijkstras() {
 
         console.log(distances);
         console.log(prev);
+
+        markTheShortestPath(prev, 9, 0);
+    }
+
+    const markTheShortestPath = (prevArray, lastNode, firstNode) => {
+        
+        let currentNode = lastNode;
+        markNode(currentNode);
+
+        let previousNode = prevArray[currentNode];
+        markEdge(findEdge(currentNode, previousNode));
+        markNode(previousNode);
+        
+        while (previousNode !== firstNode) {
+            currentNode = previousNode;
+            previousNode = prevArray[currentNode];
+            markNode(previousNode);
+            markEdge(findEdge(currentNode, previousNode));
+        }
+    }
+
+    const findEdge = (firstNode, secondNode) => {
+        const filteredEdges = edges.current.filter(edge => 
+            (parseInt(edge.source.name) === firstNode && parseInt(edge.target.name) === secondNode)
+            || (parseInt(edge.target.name) === firstNode && parseInt(edge.source.name) === secondNode));
+
+        return filteredEdges[0];
+    }
+
+    const markNode = (nodeName) => {
+        cy.current.nodes(`[id = '${nodeName}']`).style('background-color', MarkedColor);
+    }
+
+    const markEdge = (edge) => {
+        cy.current.edges(`[id = '${edge.name}']`).style('line-color', MarkedColor);
     }
 
     const getDistanceBetweenNodes = (firstNode, secondNode) => {
