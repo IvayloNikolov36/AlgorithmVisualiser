@@ -3,11 +3,14 @@ import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
 import { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
 import cytoscape from 'cytoscape';
-import { Button } from 'react-bootstrap';
+import { Button, ButtonGroup, Table } from 'react-bootstrap';
 import { maxBy } from 'lodash';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 
 export function Dijkstras() {
+
+    const [distancesArr, setDistancesArr] = useState([]);
+    const [prevsArr, setPrevsArr] = useState([]);
 
     const cy = useRef(null);
 
@@ -46,7 +49,10 @@ export function Dijkstras() {
 
     useEffect(() => {
         initializeCytoscape();
-        initializeDistancesArray();
+        const distances = initializeDistancesArray();
+        const prevs = initializePrevArray();
+        setDistancesArr(distances);
+        setPrevsArr(prevs);
     }, [])
 
     const initializeDistancesArray = () => {
@@ -109,18 +115,21 @@ export function Dijkstras() {
         console.log(distances);
         console.log(prev);
 
+        setDistancesArr(distances);
+        setPrevsArr(prev);
+
         markTheShortestPath(prev, 9, 0);
     }
 
     const markTheShortestPath = (prevArray, lastNode, firstNode) => {
-        
+
         let currentNode = lastNode;
         markNode(currentNode);
 
         let previousNode = prevArray[currentNode];
         markEdge(findEdge(currentNode, previousNode));
         markNode(previousNode);
-        
+
         while (previousNode !== firstNode) {
             currentNode = previousNode;
             previousNode = prevArray[currentNode];
@@ -129,8 +138,20 @@ export function Dijkstras() {
         }
     }
 
+    const clearPath = () => {
+        initializeCytoscape();
+        const distances = initializeDistancesArray();
+        const prevs = initializePrevArray();
+        setDistancesArr(distances);
+        setPrevsArr(prevs);
+    }
+
+    const addEdge = () => {
+
+    }
+
     const findEdge = (firstNode, secondNode) => {
-        const filteredEdges = edges.current.filter(edge => 
+        const filteredEdges = edges.current.filter(edge =>
             (parseInt(edge.source.name) === firstNode && parseInt(edge.target.name) === secondNode)
             || (parseInt(edge.target.name) === firstNode && parseInt(edge.source.name) === secondNode));
 
@@ -169,7 +190,7 @@ export function Dijkstras() {
 
     const initializeCytoscape = () => {
         const cyto = cytoscape({
-            container: document.getElementById('cy'),
+            container: document.getElementById('cy-dijkstra'),
             elements: getElements(),
             style: getStyles(),
             layout: getOptions(),
@@ -310,13 +331,54 @@ export function Dijkstras() {
 
     return (
         <>
-            <div className="d-flex justify-content-center gap-5 mt-2">
-                <Button onClick={startDijkstrasAlgorithm} variant="primary">
-                    Find Shortest Path
-                </Button>
+            <div className="d-flex justify-content-around mt-1">
+                <div>
+                    <Table responsive>
+                        <tbody>
+                            <tr>
+                                <td>v</td>
+                                {nodes.current.map((node, index) => (
+                                    <td key={index}>
+                                        {node.name}
+                                    </td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td>distance[v]</td>
+                                {nodes.current.map((node, index) => (
+                                    <td key={index}>
+                                        {(distancesArr[parseInt(node.name)] === Number.POSITIVE_INFINITY)
+                                            ? <span>&#8734;</span>
+                                            : <span>{distancesArr[parseInt(node.name)]}</span>
+                                        }
+                                    </td>
+                                ))}
+                            </tr>
+                            <tr>
+                                <td>previous[v]</td>
+                                {nodes.current.map((node, index) => (
+                                    <td key={index}>{prevsArr[parseInt(node.name)] ?? '-'}</td>
+                                ))}
+                            </tr>
+                        </tbody>
+                    </Table>
+                </div>
+                <div>
+                    <ButtonGroup>
+                        <Button onClick={startDijkstrasAlgorithm} variant="primary">
+                            Find Shortest Path
+                        </Button>
+                        <Button onClick={clearPath} variant="outline-primary">
+                            Clear Path
+                        </Button>
+                        <Button onClick={addEdge} variant="outline-primary">
+                            Add Edge
+                        </Button>
+                    </ButtonGroup>
+                </div>
             </div>
 
-            <div id="cy" className="d-flex w-100">
+            <div id="cy-dijkstra" className="d-flex w-100">
             </div>
         </>
     );
