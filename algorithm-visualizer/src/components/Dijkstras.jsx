@@ -4,6 +4,8 @@ import { setTimeOutAfter } from '../helpers/thread-sleep';
 import { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
 import cytoscape from 'cytoscape';
 import { Button } from 'react-bootstrap';
+import { maxBy } from 'lodash';
+import PriorityQueue from 'js-priority-queue/priority-queue';
 
 export function Dijkstras() {
 
@@ -44,10 +46,90 @@ export function Dijkstras() {
 
     useEffect(() => {
         initializeCytoscape();
+        initializeDistancesArray();
     }, [])
 
-    const startDijkstrasAlgorithms = () => {
+    const initializeDistancesArray = () => {
+        const distances = [];
+        const maxIndex = parseInt(maxBy(nodes.current, x => parseInt(x.name)).name);
+        distances[0] = 0;
+        for (let i = 1; i <= maxIndex; i++) {
+            distances[i] = Number.POSITIVE_INFINITY;
+        }
 
+        return distances;
+    }
+
+    const initializePrevArray = () => {
+        const prev = [];
+        const maxIndex = parseInt(maxBy(nodes.current, x => parseInt(x.name)).name);
+        for (let i = 0; i <= maxIndex; i++) {
+            prev[i] = null;
+        }
+        return prev;
+    }
+
+    const startDijkstrasAlgorithm = () => {
+
+        const distances = initializeDistancesArray();
+        const prev = initializePrevArray();
+
+        const comparator = function (firstNode, secondNode) {
+            return distances[parseInt(firstNode.name)] - distances[parseInt(secondNode.name)];
+        };
+
+        let priorityQueue = new PriorityQueue({ comparator });
+
+        priorityQueue.queue(nodes.current[0]);
+        const visitedNodes = [];
+
+        while (priorityQueue.length > 0) {
+            const nodeElement = priorityQueue.dequeue();
+            visitedNodes.push(nodeElement);
+            const [allChildren, notVisitedChildren] = getChildren(nodeElement, visitedNodes);
+
+            notVisitedChildren.forEach(node => priorityQueue.queue(node));
+
+            allChildren.forEach(childNode => {
+
+                const index = parseInt(childNode.name);
+
+                const distanceToParent = getDistanceBetweenNodes(nodeElement, childNode);
+                const indexOfParent = parseInt(nodeElement.name);
+                const parentToStartDistance = distances[indexOfParent];
+                const distance = distanceToParent + parentToStartDistance;
+
+                if (distance < distances[index]) {
+                    distances[index] = distance;
+                    prev[index] = parseInt(nodeElement.name);
+                }
+            });
+        }
+
+        console.log(distances);
+        console.log(prev);
+    }
+
+    const getDistanceBetweenNodes = (firstNode, secondNode) => {
+        const filteredEdges = edges.current.filter(edge =>
+            (edge.target.name === firstNode.name && edge.source.name === secondNode.name)
+            || (edge.source.name === firstNode.name && edge.target.name === secondNode.name));
+
+        return filteredEdges[0].weight;
+    }
+
+    const getChildren = (parentNode, visited) => {
+        const nodeEdges = edges.current.filter(edge => edge.source === parentNode || edge.target === parentNode);
+
+        const children = nodeEdges.map(edge => {
+            const otherNode = edge.source === parentNode ? edge.target : edge.source;
+            return otherNode;
+        });
+
+        const containsNode = (node) => visited.some(visitedNode => visitedNode.name === node.name);
+        const notVisitedChildren = children.filter(node => !containsNode(node));
+
+        return [children, notVisitedChildren];
     }
 
     const initializeCytoscape = () => {
@@ -113,7 +195,6 @@ export function Dijkstras() {
         });
 
         const edgesElements = edges.current.map(edge => {
-            debugger;
             return {
                 group: EdgesGroup,
                 data: {
@@ -195,7 +276,7 @@ export function Dijkstras() {
     return (
         <>
             <div className="d-flex justify-content-center gap-5 mt-2">
-                <Button onClick={startDijkstrasAlgorithms} variant="primary">
+                <Button onClick={startDijkstrasAlgorithm} variant="primary">
                     Find Shortest Path
                 </Button>
             </div>
