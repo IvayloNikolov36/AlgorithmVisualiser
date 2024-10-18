@@ -3,51 +3,53 @@ import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
 import { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
 import cytoscape from 'cytoscape';
-import { Button, ButtonGroup, Table } from 'react-bootstrap';
-import { maxBy } from 'lodash';
+import { Button, ButtonGroup, Form, Modal, Table } from 'react-bootstrap';
+import { maxBy, sortBy } from 'lodash';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 
 export function Dijkstras() {
 
     const [distancesArr, setDistancesArr] = useState([]);
     const [prevsArr, setPrevsArr] = useState([]);
-
+    const [showModal, setShowModal] = useState(false);
     const cy = useRef(null);
-
-    const nodes = useRef([
-        new Node('0', 10, 210),
-        new Node('1', 950, 50),
-        new Node('2', 550, 450),
-        new Node('4', 500, 50),
-        new Node('5', 420, 270),
-        new Node('6', 220, 100),
-        new Node('7', 980, 400),
-        new Node('8', 200, 410),
-        new Node('9', 1200, 245),
-        new Node('11', 720, 200)
-    ]);
-
-    const edges = useRef([
-        new Edge('0-6', nodes.current[0], nodes.current[5], 10),
-        new Edge('0-8', nodes.current[0], nodes.current[7], 12),
-        new Edge('6-4', nodes.current[5], nodes.current[3], 17),
-        new Edge('6-5', nodes.current[5], nodes.current[4], 6),
-        new Edge('4-1', nodes.current[3], nodes.current[1], 20),
-        new Edge('4-11', nodes.current[3], nodes.current[9], 11),
-        new Edge('5-4', nodes.current[4], nodes.current[3], 5),
-        new Edge('5-11', nodes.current[4], nodes.current[9], 33),
-        new Edge('8-5', nodes.current[7], nodes.current[4], 3),
-        new Edge('8-2', nodes.current[7], nodes.current[2], 14),
-        new Edge('2-11', nodes.current[2], nodes.current[9], 9),
-        new Edge('2-7', nodes.current[2], nodes.current[6], 15),
-        new Edge('11-1', nodes.current[9], nodes.current[1], 6),
-        new Edge('11-7', nodes.current[9], nodes.current[6], 20),
-        new Edge('1-9', nodes.current[1], nodes.current[8], 5),
-        new Edge('1-7', nodes.current[1], nodes.current[6], 26),
-        new Edge('7-9', nodes.current[6], nodes.current[8], 3),
-    ]);
+    const nodes = useRef([]);
+    const edges = useRef([]);
 
     useEffect(() => {
+        nodes.current = [
+            new Node('0', 10, 210),
+            new Node('1', 950, 50),
+            new Node('2', 550, 450),
+            new Node('3', 720, 200),
+            new Node('4', 500, 50),
+            new Node('5', 420, 270),
+            new Node('6', 220, 100),
+            new Node('7', 980, 400),
+            new Node('8', 200, 410),
+            new Node('9', 1200, 245),
+        ];
+
+        edges.current = [
+            new Edge('0-6', findNode('0'), findNode('6'), 10),
+            new Edge('0-8', findNode('0'), findNode('8'), 12),
+            new Edge('6-4', findNode('6'), findNode('4'), 17),
+            new Edge('6-5', findNode('6'), findNode('5'), 6),
+            new Edge('4-1', findNode('4'), findNode('1'), 20),
+            new Edge('4-3', findNode('4'), findNode('3'), 11),
+            new Edge('5-4', findNode('5'), findNode('4'), 5),
+            new Edge('5-3', findNode('5'), findNode('3'), 33),
+            new Edge('8-5', findNode('8'), findNode('5'), 3),
+            new Edge('8-2', findNode('8'), findNode('2'), 14),
+            new Edge('2-3', findNode('2'), findNode('3'), 9),
+            new Edge('2-7', findNode('2'), findNode('7'), 15),
+            new Edge('3-1', findNode('3'), findNode('1'), 6),
+            new Edge('3-7', findNode('3'), findNode('7'), 20),
+            new Edge('1-9', findNode('1'), findNode('9'), 5),
+            new Edge('1-7', findNode('1'), findNode('7'), 26),
+            new Edge('7-9', findNode('7'), findNode('9'), 3),
+        ];
+
         initializeCytoscape();
         const distances = initializeDistancesArray();
         const prevs = initializePrevArray();
@@ -146,8 +148,45 @@ export function Dijkstras() {
         setPrevsArr(prevs);
     }
 
-    const addEdge = () => {
+    const openModal = () => {
+        setShowModal(true);
+    }
 
+    const closeModal = () => {
+        setShowModal(false);
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        const sourceNodeName = e.target[1].value;
+        let sourceNode = findNode(sourceNodeName);
+
+        if (!sourceNode) {
+            sourceNode = new Node(sourceNodeName, 1200, 500);
+            nodes.current.push(sourceNode);
+        }
+
+        const targetNodeName = e.target[2].value;
+        let targetNode = findNode(targetNodeName);
+
+        if (!targetNode) {
+            targetNode = new Node(targetNodeName, 1200, 500);
+            nodes.current.push(targetNode);
+        }
+
+        const edgeName = e.target[0].value;
+        const weight = e.target[3].value;
+        const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
+        edges.current.push(newEdge);
+
+        initializeCytoscape();
+
+        closeModal();
+    }
+
+    const findNode = (name) => {
+        return nodes.current.filter(node => node.name === name)[0];
     }
 
     const findEdge = (firstNode, secondNode) => {
@@ -371,7 +410,7 @@ export function Dijkstras() {
                         <Button onClick={clearPath} variant="outline-primary">
                             Clear Path
                         </Button>
-                        <Button onClick={addEdge} variant="outline-primary">
+                        <Button onClick={openModal} variant="outline-primary">
                             Add Edge
                         </Button>
                     </ButtonGroup>
@@ -380,6 +419,40 @@ export function Dijkstras() {
 
             <div id="cy-dijkstra" className="d-flex w-100">
             </div>
+
+            <Modal show={showModal} onHide={closeModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add Edge</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form id="new-edge" onSubmit={handleSubmit}>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Edge Name</Form.Label>
+                            <Form.Control placeholder="Enter edge name" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Source</Form.Label>
+                            <Form.Control placeholder="Enter source" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Target</Form.Label>
+                            <Form.Control placeholder="Enter target" />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="formGroupEmail">
+                            <Form.Label>Weight</Form.Label>
+                            <Form.Control placeholder="Enter weight" />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={closeModal}>
+                        Close
+                    </Button>
+                    <Button variant="primary" type="submit" form="new-edge">
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 }
