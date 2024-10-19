@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
-import { EdgesGroup, MarkedColor, NodesGroup } from '../constants/graph-constants';
+import { MarkedColor } from '../constants/graph-constants';
+import {
+    getCytoscapeOptions,
+    getElements,
+    getStyles,
+    findEdge,
+    findNode,
+    markEdge,
+    markNode
+} from '../functions/graph-functions';
 import cytoscape from 'cytoscape';
 import { Button, ButtonGroup, Form, Modal, Table } from 'react-bootstrap';
 import { maxBy } from 'lodash';
@@ -9,6 +18,7 @@ import PriorityQueue from 'js-priority-queue/priority-queue';
 
 const StartNodeName = '0';
 const EndNodeName = '9';
+const SpacingFactor = 0.75;
 
 export function Dijkstras() {
 
@@ -22,7 +32,17 @@ export function Dijkstras() {
     const edges = useRef([]);
 
     useEffect(() => {
-        nodes.current = [
+        nodes.current = getInitialNodes();
+        edges.current = getInitialEdges();
+        initializeCytoscape();
+        const distances = initializeDistancesArray();
+        const prevs = initializePrevArray();
+        setDistancesArr(distances);
+        setPrevsArr(prevs);
+    }, [])
+
+    const getInitialNodes = () => {
+        return [
             new Node(StartNodeName, 10, 210),
             new Node('1', 950, 50),
             new Node('2', 550, 450),
@@ -34,33 +54,29 @@ export function Dijkstras() {
             new Node('8', 200, 410),
             new Node(EndNodeName, 1200, 245),
         ];
+    }
 
-        edges.current = [
-            new Edge('0-6', findNode('0'), findNode('6'), 10),
-            new Edge('0-8', findNode('0'), findNode('8'), 12),
-            new Edge('6-4', findNode('6'), findNode('4'), 17),
-            new Edge('6-5', findNode('6'), findNode('5'), 6),
-            new Edge('4-1', findNode('4'), findNode('1'), 20),
-            new Edge('4-3', findNode('4'), findNode('3'), 11),
-            new Edge('5-4', findNode('5'), findNode('4'), 5),
-            new Edge('5-3', findNode('5'), findNode('3'), 33),
-            new Edge('8-5', findNode('8'), findNode('5'), 3),
-            new Edge('8-2', findNode('8'), findNode('2'), 14),
-            new Edge('2-3', findNode('2'), findNode('3'), 9),
-            new Edge('2-7', findNode('2'), findNode('7'), 15),
-            new Edge('3-1', findNode('3'), findNode('1'), 6),
-            new Edge('3-7', findNode('3'), findNode('7'), 20),
-            new Edge('1-9', findNode('1'), findNode('9'), 5),
-            new Edge('1-7', findNode('1'), findNode('7'), 26),
-            new Edge('7-9', findNode('7'), findNode('9'), 3),
+    const getInitialEdges = () => {
+        return [
+            new Edge('0-6', findNode('0', nodes.current), findNode('6', nodes.current), 10),
+            new Edge('0-8', findNode('0', nodes.current), findNode('8', nodes.current), 12),
+            new Edge('6-4', findNode('6', nodes.current), findNode('4', nodes.current), 17),
+            new Edge('6-5', findNode('6', nodes.current), findNode('5', nodes.current), 6),
+            new Edge('4-1', findNode('4', nodes.current), findNode('1', nodes.current), 20),
+            new Edge('4-3', findNode('4', nodes.current), findNode('3', nodes.current), 11),
+            new Edge('5-4', findNode('5', nodes.current), findNode('4', nodes.current), 5),
+            new Edge('5-3', findNode('5', nodes.current), findNode('3', nodes.current), 33),
+            new Edge('8-5', findNode('8', nodes.current), findNode('5', nodes.current), 3),
+            new Edge('8-2', findNode('8', nodes.current), findNode('2', nodes.current), 14),
+            new Edge('2-3', findNode('2', nodes.current), findNode('3', nodes.current), 9),
+            new Edge('2-7', findNode('2', nodes.current), findNode('7', nodes.current), 15),
+            new Edge('3-1', findNode('3', nodes.current), findNode('1', nodes.current), 6),
+            new Edge('3-7', findNode('3', nodes.current), findNode('7', nodes.current), 20),
+            new Edge('1-9', findNode('1', nodes.current), findNode('9', nodes.current), 5),
+            new Edge('1-7', findNode('1', nodes.current), findNode('7', nodes.current), 26),
+            new Edge('7-9', findNode('7', nodes.current), findNode('9', nodes.current), 3),
         ];
-
-        initializeCytoscape();
-        const distances = initializeDistancesArray();
-        const prevs = initializePrevArray();
-        setDistancesArr(distances);
-        setPrevsArr(prevs);
-    }, [])
+    }
 
     const initializeDistancesArray = () => {
         const distances = [];
@@ -131,17 +147,17 @@ export function Dijkstras() {
     const markTheShortestPath = (prevArray, lastNode, firstNode) => {
 
         let currentNode = lastNode;
-        markNode(currentNode);
+        markNode(cy.current, currentNode, MarkedColor);
 
         let previousNode = prevArray[currentNode];
-        markEdge(findEdge(currentNode, previousNode));
-        markNode(previousNode);
+        markEdge(cy.current, findEdge(currentNode, previousNode, edges.current).name, MarkedColor);
+        markNode(cy.current, previousNode, MarkedColor);
 
         while (previousNode !== firstNode) {
             currentNode = previousNode;
             previousNode = prevArray[currentNode];
-            markNode(previousNode);
-            markEdge(findEdge(currentNode, previousNode));
+            markNode(cy.current, previousNode, MarkedColor);
+            markEdge(cy.current, findEdge(currentNode, previousNode, edges.current).name, MarkedColor);
         }
     }
 
@@ -161,53 +177,33 @@ export function Dijkstras() {
         setShowModal(false);
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = (event) => {
+        event.preventDefault();
 
-        const sourceNodeName = e.target[1].value;
-        let sourceNode = findNode(sourceNodeName);
+        const sourceNodeName = event.target[1].value;
+        let sourceNode = findNode(sourceNodeName, nodes.current);
 
         if (!sourceNode) {
             sourceNode = new Node(sourceNodeName, 1200, 500);
             nodes.current.push(sourceNode);
         }
 
-        const targetNodeName = e.target[2].value;
-        let targetNode = findNode(targetNodeName);
+        const targetNodeName = event.target[2].value;
+        let targetNode = findNode(targetNodeName, nodes.current);
 
         if (!targetNode) {
             targetNode = new Node(targetNodeName, 1200, 500);
             nodes.current.push(targetNode);
         }
 
-        const edgeName = e.target[0].value;
-        const weight = parseInt(e.target[3].value);
+        const edgeName = event.target[0].value;
+        const weight = parseInt(event.target[3].value);
         const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
         edges.current.push(newEdge);
 
         initializeCytoscape();
 
         closeModal();
-    }
-
-    const findNode = (name) => {
-        return nodes.current.filter(node => node.name === name)[0];
-    }
-
-    const findEdge = (firstNode, secondNode) => {
-        const filteredEdges = edges.current.filter(edge =>
-            (parseInt(edge.source.name) === firstNode && parseInt(edge.target.name) === secondNode)
-            || (parseInt(edge.target.name) === firstNode && parseInt(edge.source.name) === secondNode));
-
-        return filteredEdges[0];
-    }
-
-    const markNode = (nodeName) => {
-        cy.current.nodes(`[id = '${nodeName}']`).style('background-color', MarkedColor);
-    }
-
-    const markEdge = (edge) => {
-        cy.current.edges(`[id = '${edge.name}']`).style('line-color', MarkedColor);
     }
 
     const getDistanceBetweenNodes = (firstNode, secondNode) => {
@@ -262,9 +258,9 @@ export function Dijkstras() {
     const initializeCytoscape = () => {
         const cyto = cytoscape({
             container: document.getElementById('cy-dijkstra'),
-            elements: getElements(),
+            elements: getElements(nodes.current, edges.current),
             style: getStyles(),
-            layout: getOptions(),
+            layout: getCytoscapeOptions(SpacingFactor),
             zoom: 1
         });
 
@@ -275,119 +271,6 @@ export function Dijkstras() {
         cyto.userZoomingEnabled(false);
 
         cy.current = cyto;
-    }
-
-    const getOptions = () => {
-        return {
-            name: 'preset',
-            fit: true, // whether to fit the viewport to the graph
-            directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
-            padding: 60, // padding on fit
-            circle: false, // put depths in concentric circles if true, put depths top down if false
-            grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
-            spacingFactor: 0.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-            boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-            avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-            nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
-            roots: undefined, // the roots of the trees
-            depthSort: undefined, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
-            animate: false, // whether to transition the node positions
-            animationDuration: 500, // duration of animation in ms if enabled
-            animationEasing: undefined, // easing of animation if enabled,
-            animateFilter: function (node, i) { return true; }, // a function that determines whether the node should be animated.  All nodes animated by default on animate enabled.  Non-animated nodes are positioned immediately when the layout starts
-            ready: undefined, // callback on layoutready
-            stop: undefined, // callback on layoutstop
-            transform: function (node, position) { return position; } // transform a given node position. Useful for changing flow direction in discrete layouts
-        };
-    }
-
-    const getElements = () => {
-
-        const nodesElements = nodes.current.map(node => {
-            return {
-                group: NodesGroup,
-                data: { id: node.name },
-                position: { x: node.positionX, y: node.positionY }
-            }
-        });
-
-        const edgesElements = edges.current.map(edge => {
-            return {
-                group: EdgesGroup,
-                data: {
-                    id: edge.name,
-                    source: edge.source.name,
-                    target: edge.target.name,
-                    weight: edge.weight
-                }
-            }
-        });
-
-        return [...nodesElements, ...edgesElements]
-    }
-
-    const getStyles = () => {
-        return [
-            {
-                selector: 'node',
-                style: {
-                    'background-color': '#0D6EFD',
-                    'label': 'data(id)',
-                    'width': 40,
-                    'height': 40
-                }
-            },
-            {
-                selector: 'edge',
-                style: {
-                    'width': 5,
-                    'line-color': '#ccc',
-                    // 'line-style': 'dashed',
-                    'target-arrow-color': '#ccc',
-                    // 'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier',
-                    'label': 'data(weight)',
-                    // 'source-label': 'data(source)',
-                    'text-margin-x': 5,
-                    'text-margin-y': 20
-                }
-            },
-            {
-                selector: 'node[background_color]',
-                style: {
-                    'background-color': 'data(background_color)',
-                    'text-outline-color': 'data(background_color)',
-                }
-            },
-            {
-                selector: 'edge[line-color]',
-                style: {
-                    'line-color': 'data(line-color)',
-                }
-            },
-            {
-                selector: 'edge[target-arrow-color]',
-                style: {
-                    'target-arrow-color': 'data(target-arrow-color)',
-                }
-            },
-            {
-                selector: 'node.highlight',
-                style: {
-                    'label': 'data(name)',
-                    'text-valign': 'center',
-                    'color': "white",
-                    'text-outline-color': 'red',
-                    'text-outline-width': 2,
-                    'background-color': 'red'
-                }
-            },
-            {
-                selector: 'node.semitransp',
-                style: { 'opacity': '0.5' }
-            },
-
-        ];
     }
 
     return (

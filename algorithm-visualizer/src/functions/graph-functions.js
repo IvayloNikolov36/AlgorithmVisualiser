@@ -16,6 +16,16 @@ export function findNode(nodeName, nodes) {
     return nodes.filter(node => node.name === nodeName)[0];
 }
 
+export function findEdge(firstNodeName, secondNodeName, edges) {
+    const filteredEdges = edges.filter(edge =>
+        (parseInt(edge.source.name) === firstNodeName
+            && parseInt(edge.target.name) === secondNodeName)
+        || (parseInt(edge.target.name) === firstNodeName
+            && parseInt(edge.source.name) === secondNodeName));
+
+    return filteredEdges[0];
+}
+
 export function getCytoscapeOptions(spacingFactor) {
     return {
         name: 'preset',
