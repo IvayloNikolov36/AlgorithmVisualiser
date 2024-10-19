@@ -21,6 +21,8 @@ const SpacingFactor = 0.75;
 export function Prims() {
 
     const [showModal, setShowModal] = useState(false);
+    const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
+    const canDeleteNodes = useRef(false);
     const cy = useRef(null);
     const nodes = useRef([]);
     const edges = useRef([]);
@@ -81,6 +83,12 @@ export function Prims() {
             layout: getCytoscapeOptions(SpacingFactor),
             zoom: 1
         });
+
+        if (canDeleteNodes.current) {
+            cyto.on('tap', 'node', removeNodeHandler);
+        }
+
+        cyto.userZoomingEnabled(false);
 
         cy.current = cyto;
     }
@@ -148,6 +156,28 @@ export function Prims() {
         closeModal();
     }
 
+    const deleteNodes = () => {
+        setIsDeleteNodesActive(prev => {
+            return !prev;
+        });
+
+        canDeleteNodes.current = !canDeleteNodes.current;
+
+        if (canDeleteNodes.current) {
+            cy.current.on('tap', 'node', removeNodeHandler);
+        } else {
+            initializeCytoscape();
+        }
+    }
+
+    const removeNodeHandler = function (e) {
+        const nodeName = e.target.id().toString();
+        nodes.current = nodes.current.filter(n => n.name !== nodeName);
+        edges.current = edges.current
+            .filter(e => e.source.name !== nodeName && e.target.name !== nodeName);
+        initializeCytoscape();
+    }
+
     return (
         <>
             <div className="d-flex justify-content-center gap-5 mt-2">
@@ -156,6 +186,9 @@ export function Prims() {
                 </Button>
                 <Button onClick={openModal} variant="outline-primary">
                     Add Edge
+                </Button>
+                <Button onClick={deleteNodes} active={isDeleteNodesActive} variant="outline-primary">
+                    Delete Nodes
                 </Button>
             </div>
 
