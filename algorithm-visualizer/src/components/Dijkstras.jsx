@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
 import { MarkedColor } from '../constants/graph-constants';
 import {
+    addEdge,
     getCytoscapeOptions,
     getElements,
     getStyles,
@@ -176,30 +177,8 @@ export function Dijkstras() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-
-        const sourceNodeName = event.target[1].value;
-        let sourceNode = findNode(sourceNodeName, nodes.current);
-
-        if (!sourceNode) {
-            sourceNode = new Node(sourceNodeName, 1200, 500);
-            nodes.current.push(sourceNode);
-        }
-
-        const targetNodeName = event.target[2].value;
-        let targetNode = findNode(targetNodeName, nodes.current);
-
-        if (!targetNode) {
-            targetNode = new Node(targetNodeName, 1200, 500);
-            nodes.current.push(targetNode);
-        }
-
-        const edgeName = event.target[0].value;
-        const weight = parseInt(event.target[3].value);
-        const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
-        edges.current.push(newEdge);
-
+        addEdge(event.target, nodes.current, edges.current);
         initializeCytoscape();
-
         closeModal();
     }
 
@@ -239,8 +218,8 @@ export function Dijkstras() {
         }
     }
 
-    const removeNodeHandler = function (e) {
-        const nodeName = e.target.id().toString();
+    const removeNodeHandler = function (event) {
+        const nodeName = event.target.id().toString();
 
         if (nodeName === StartNodeName || nodeName === EndNodeName) {
             return;

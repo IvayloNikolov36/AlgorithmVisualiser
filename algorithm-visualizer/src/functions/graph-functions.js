@@ -1,4 +1,5 @@
 import { EdgesGroup, NodesGroup } from '../constants/graph-constants';
+import { Edge, Node } from '../models';
 
 export function markNode(cytoscape, nodeName, color) {
     cytoscape.nodes(`[id = '${nodeName}']`).style('background-color', color);
@@ -24,6 +25,29 @@ export function findEdge(firstNodeName, secondNodeName, edges) {
             && parseInt(edge.source.name) === secondNodeName));
 
     return filteredEdges[0];
+}
+
+export function addEdge(data, nodes, edges) {
+    const sourceNodeName = data[1].value;
+    let sourceNode = findNode(sourceNodeName, nodes);
+
+    if (!sourceNode) {
+        sourceNode = new Node(sourceNodeName, 1200, 500);
+        nodes.push(sourceNode);
+    }
+
+    const targetNodeName = data[2].value;
+    let targetNode = findNode(targetNodeName, nodes);
+
+    if (!targetNode) {
+        targetNode = new Node(targetNodeName, 1200, 500);
+        nodes.push(targetNode);
+    }
+
+    const edgeName = data[0].value;
+    const weight = parseInt(data[3].value);
+    const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
+    edges.push(newEdge);
 }
 
 export function getCytoscapeOptions(spacingFactor) {

@@ -3,6 +3,7 @@ import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
 import { MarkedColor, WaitInSeconds } from '../constants/graph-constants';
 import {
+    addEdge,
     getCytoscapeOptions,
     getElements,
     getNodeEdges,
@@ -127,32 +128,10 @@ export function Prims() {
         setShowModal(false);
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const sourceNodeName = e.target[1].value;
-        let sourceNode = findNode(sourceNodeName, nodes.current);
-
-        if (!sourceNode) {
-            sourceNode = new Node(sourceNodeName, 1200, 500);
-            nodes.current.push(sourceNode);
-        }
-
-        const targetNodeName = e.target[2].value;
-        let targetNode = findNode(targetNodeName, nodes.current);
-
-        if (!targetNode) {
-            targetNode = new Node(targetNodeName, 1200, 500);
-            nodes.current.push(targetNode);
-        }
-
-        const edgeName = e.target[0].value;
-        const weight = parseInt(e.target[3].value);
-        const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
-        edges.current.push(newEdge);
-
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        addEdge(event.target, nodes.current, edges.current);
         initializeCytoscape();
-
         closeModal();
     }
 
