@@ -6,18 +6,24 @@ import { Button, ButtonGroup, Form, Modal, Table } from 'react-bootstrap';
 import { maxBy } from 'lodash';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 
+
+const StartNodeName = '0';
+const EndNodeName = '9';
+
 export function Dijkstras() {
 
     const [distancesArr, setDistancesArr] = useState([]);
     const [prevsArr, setPrevsArr] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
+    const canDeleteNodes = useRef(false);
     const cy = useRef(null);
     const nodes = useRef([]);
     const edges = useRef([]);
 
     useEffect(() => {
         nodes.current = [
-            new Node('0', 10, 210),
+            new Node(StartNodeName, 10, 210),
             new Node('1', 950, 50),
             new Node('2', 550, 450),
             new Node('3', 720, 200),
@@ -26,7 +32,7 @@ export function Dijkstras() {
             new Node('6', 220, 100),
             new Node('7', 980, 400),
             new Node('8', 200, 410),
-            new Node('9', 1200, 245),
+            new Node(EndNodeName, 1200, 245),
         ];
 
         edges.current = [
@@ -119,7 +125,7 @@ export function Dijkstras() {
         setDistancesArr(distances);
         setPrevsArr(prev);
 
-        markTheShortestPath(prev, 9, 0);
+        markTheShortestPath(prev, parseInt(EndNodeName), parseInt(StartNodeName));
     }
 
     const markTheShortestPath = (prevArray, lastNode, firstNode) => {
@@ -226,6 +232,33 @@ export function Dijkstras() {
         return [children, notVisitedChildren];
     }
 
+    const deleteNodes = () => {
+        setIsDeleteNodesActive(prev => {
+            return !prev;
+        });
+
+        canDeleteNodes.current = !canDeleteNodes.current;
+
+        if (canDeleteNodes.current) {
+            cy.current.on('tap', 'node', removeNodeHandler);
+        } else {
+            initializeCytoscape();
+        }
+    }
+
+    const removeNodeHandler = function (e) {
+        const nodeName = e.target.id().toString();
+
+        if (nodeName === StartNodeName || nodeName === EndNodeName) {
+            return;
+        }
+
+        nodes.current = nodes.current.filter(n => n.name !== nodeName);
+        edges.current = edges.current.filter(e => e.source.name !== nodeName && e.target.name !== nodeName);
+
+        initializeCytoscape();
+    }
+
     const initializeCytoscape = () => {
         const cyto = cytoscape({
             container: document.getElementById('cy-dijkstra'),
@@ -235,21 +268,11 @@ export function Dijkstras() {
             zoom: 1
         });
 
-        cyto.on('free', 'node', (e) => {
-            let item = e.target;
+        if (canDeleteNodes.current) {
+            cyto.on('tap', 'node', removeNodeHandler);
+        }
 
-            const nodeData = item._private;
-            const nodeName = nodeData.data.id;
-            const x = nodeData.position.x;
-            const y = nodeData.position.y;
-            const index = nodes.current
-                .indexOf(nodes.current.filter(node => node.name === nodeName)[0]);
-            nodes.current[index] = new Node(nodeName, x, y);
-
-            initializeCytoscape();
-
-            console.log(nodes);
-        });
+        cyto.userZoomingEnabled(false);
 
         cy.current = cyto;
     }
@@ -411,6 +434,11 @@ export function Dijkstras() {
                         </Button>
                         <Button onClick={openModal} variant="outline-primary">
                             Add Edge
+                        </Button>
+                    </ButtonGroup>
+                    <ButtonGroup className="ms-2">
+                        <Button onClick={deleteNodes} active={isDeleteNodesActive} variant="outline-primary">
+                            Delete Nodes
                         </Button>
                     </ButtonGroup>
                 </div>
