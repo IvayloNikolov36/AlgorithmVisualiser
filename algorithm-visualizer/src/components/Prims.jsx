@@ -1,37 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
-import  { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
+import { MarkedColor, WaitInSeconds } from '../constants/graph-constants';
+import {
+    getCytoscapeOptions,
+    getElements,
+    getNodeEdges,
+    getStyles,
+    findNode,
+    markEdge,
+    markNode
+} from '../functions/graph-functions';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 import cytoscape from 'cytoscape';
 import { Button, Form, Modal } from 'react-bootstrap';
+
+
+const SpacingFactor = 0.75;
 
 export function Prims() {
 
     const [showModal, setShowModal] = useState(false);
     const cy = useRef(null);
-
-    const nodes = useRef([
-        new Node('a', 150, 10),
-        new Node('b', 0, 400),
-        new Node('c', 500, 10),
-        new Node('d', 650, 400),
-        new Node('e', 900, 110),
-        new Node('f', 1200, 250)
-    ]);
-
-    const edges = useRef([
-        new Edge('ab', nodes.current[0], nodes.current[1], 4),
-        new Edge('ac', nodes.current[0], nodes.current[2], 5),
-        new Edge('ad', nodes.current[0], nodes.current[3], 9),
-        new Edge('bd', nodes.current[1], nodes.current[3], 2),
-        new Edge('cd', nodes.current[2], nodes.current[3], 20),
-        new Edge('ce', nodes.current[2], nodes.current[4], 7),
-        new Edge('ed', nodes.current[4], nodes.current[3], 8),
-        new Edge('ef', nodes.current[4], nodes.current[5], 12)
-    ]);
+    const nodes = useRef([]);
+    const edges = useRef([]);
 
     useEffect(() => {
+        nodes.current = getInitialNodes();
+        edges.current = getInitialEdges();
         initializeCytoscape();
     }, [])
 
@@ -43,9 +39,9 @@ export function Prims() {
         let priorityQueue = new PriorityQueue({ comparator });
 
         let currentNode = nodes.current[0];
-        markNode(currentNode);
+        markNode(cy.current, currentNode.name, MarkedColor);
         markedNodes.push(currentNode);
-        let nodeEdges = getNodeEdges(currentNode);
+        let nodeEdges = getNodeEdges(edges.current, currentNode);
         enqueueElements(priorityQueue, nodeEdges);
 
         while (priorityQueue.length > 0) {
@@ -53,36 +49,24 @@ export function Prims() {
 
             // to avoid cycles
             if (markedNodes.some(node => node.name === selectedEdge.source.name)
-                    && markedNodes.some(node => node.name === selectedEdge.target.name)) {
+                && markedNodes.some(node => node.name === selectedEdge.target.name)) {
                 continue;
             }
 
             await setTimeOutAfter(WaitInSeconds);
             spanningTreeEdges.push(selectedEdge);
-            markEdge(selectedEdge);
+            markEdge(cy.current, selectedEdge.name, MarkedColor);
             await setTimeOutAfter(WaitInSeconds);
 
             currentNode = markedNodes.includes(selectedEdge.source) ? selectedEdge.target : selectedEdge.source;
-            markNode(currentNode);
+            markNode(cy.current, currentNode.name, MarkedColor);
             markedNodes.push(currentNode);
-            nodeEdges = getNodeEdges(currentNode)
+            nodeEdges = getNodeEdges(edges.current, currentNode)
                 .filter(edge => !spanningTreeEdges.includes(edge))
                 .filter(edge => !priorityQueue.priv.data.includes(edge));
 
             enqueueElements(priorityQueue, nodeEdges);
         }
-    }
-
-    const markNode = (node) => {
-        cy.current.nodes(`[id = '${node.name}']`).style('background-color', MarkedColor);
-    }
-
-    const markEdge = (edge) => {
-        cy.current.edges(`[id = '${edge.name}']`).style('line-color', MarkedColor);
-    }
-
-    const getNodeEdges = (node) => {
-        return edges.current.filter(edge => edge.source === node || edge.target === node);
     }
 
     const enqueueElements = (queue, elements) => {
@@ -92,139 +76,36 @@ export function Prims() {
     const initializeCytoscape = () => {
         const cyto = cytoscape({
             container: document.getElementById('cy'),
-            elements: getElements(),
+            elements: getElements(nodes.current, edges.current),
             style: getStyles(),
-            layout: getOptions(),
+            layout: getCytoscapeOptions(SpacingFactor),
             zoom: 1
-        });
-
-        cyto.on('free', 'node', (e) => {
-            let item = e.target;
-
-            const nodeData = item._private;
-            const nodeName = nodeData.data.id;
-            const x = nodeData.position.x;
-            const y = nodeData.position.y;
-            const index = nodes.current
-                .indexOf(nodes.current.filter(node => node.name === nodeName)[0]);
-            nodes.current[index] = new Node(nodeName, x, y);
-
-            initializeCytoscape();
         });
 
         cy.current = cyto;
     }
 
-    const getOptions = () => {
-        return {
-            name: 'preset',
-            fit: true, // whether to fit the viewport to the graph
-            directed: false, // whether the tree is directed downwards (or edges can point in any direction if false)
-            padding: 60, // padding on fit
-            circle: false, // put depths in concentric circles if true, put depths top down if false
-            grid: false, // whether to create an even grid into which the DAG is placed (circle:false only)
-            spacingFactor: 0.75, // positive spacing factor, larger => more space between nodes (N.B. n/a if causes overlap)
-            boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-            avoidOverlap: true, // prevents node overlap, may overflow boundingBox if not enough space
-            nodeDimensionsIncludeLabels: false, // Excludes the label when calculating node bounding boxes for the layout algorithm
-            roots: undefined, // the roots of the trees
-            depthSort: undefined, // a sorting function to order nodes at equal depth. e.g. function(a, b){ return a.data('weight') - b.data('weight') }
-            animate: false, // whether to transition the node positions
-            animationDuration: 500, // duration of animation in ms if enabled
-            animationEasing: undefined, // easing of animation if enabled,
-            animateFilter: function (node, i) { return true; }, // a function that determines whether the node should be animated.  All nodes animated by default on animate enabled.  Non-animated nodes are positioned immediately when the layout starts
-            ready: undefined, // callback on layoutready
-            stop: undefined, // callback on layoutstop
-            transform: function (node, position) { return position; } // transform a given node position. Useful for changing flow direction in discrete layouts
-        };
-    }
-
-    const getElements = () => {
-
-        const nodesElements = nodes.current.map(node => {
-            return {
-                group: NodesGroup,
-                data: { id: node.name },
-                position: { x: node.positionX, y: node.positionY }
-            }
-        });
-
-        const edgesElements = edges.current.map(edge => {
-            return {
-                group: EdgesGroup,
-                data: {
-                    id: edge.name,
-                    source: edge.source.name,
-                    target: edge.target.name,
-                    weight: edge.weight
-                }
-            }
-        });
-
-        return [...nodesElements, ...edgesElements]
-    }
-
-    const getStyles = () => {
+    const getInitialNodes = () => {
         return [
-            {
-                selector: 'node',
-                style: {
-                    'background-color': '#0D6EFD',
-                    'label': 'data(id)',
-                    'width': 40,
-                    'height': 40
-                }
-            },
-            {
-                selector: 'edge',
-                style: {
-                    'width': 5,
-                    'line-color': '#ccc',
-                    // 'line-style': 'dashed',
-                    'target-arrow-color': '#ccc',
-                    // 'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier',
-                    'label': 'data(weight)',
-                    // 'source-label': 'data(source)',
-                    'text-margin-x': 5,
-                    'text-margin-y': 20
-                }
-            },
-            {
-                selector: 'node[background_color]',
-                style: {
-                    'background-color': 'data(background_color)',
-                    'text-outline-color': 'data(background_color)',
-                }
-            },
-            {
-                selector: 'edge[line-color]',
-                style: {
-                    'line-color': 'data(line-color)',
-                }
-            },
-            {
-                selector: 'edge[target-arrow-color]',
-                style: {
-                    'target-arrow-color': 'data(target-arrow-color)',
-                }
-            },
-            {
-                selector: 'node.highlight',
-                style: {
-                    'label': 'data(name)',
-                    'text-valign': 'center',
-                    'color': "white",
-                    'text-outline-color': 'red',
-                    'text-outline-width': 2,
-                    'background-color': 'red'
-                }
-            },
-            {
-                selector: 'node.semitransp',
-                style: { 'opacity': '0.5' }
-            },
+            new Node('a', 150, 10),
+            new Node('b', 0, 400),
+            new Node('c', 500, 10),
+            new Node('d', 650, 400),
+            new Node('e', 900, 110),
+            new Node('f', 1200, 250)
+        ];
+    }
 
+    const getInitialEdges = () => {
+        return [
+            new Edge('ab', nodes.current[0], nodes.current[1], 4),
+            new Edge('ac', nodes.current[0], nodes.current[2], 5),
+            new Edge('ad', nodes.current[0], nodes.current[3], 9),
+            new Edge('bd', nodes.current[1], nodes.current[3], 2),
+            new Edge('cd', nodes.current[2], nodes.current[3], 20),
+            new Edge('ce', nodes.current[2], nodes.current[4], 7),
+            new Edge('ed', nodes.current[4], nodes.current[3], 8),
+            new Edge('ef', nodes.current[4], nodes.current[5], 12)
         ];
     }
 
@@ -240,7 +121,7 @@ export function Prims() {
         e.preventDefault();
 
         const sourceNodeName = e.target[1].value;
-        let sourceNode = findNode(sourceNodeName);
+        let sourceNode = findNode(sourceNodeName, nodes.current);
 
         if (!sourceNode) {
             sourceNode = new Node(sourceNodeName, 1200, 500);
@@ -248,7 +129,7 @@ export function Prims() {
         }
 
         const targetNodeName = e.target[2].value;
-        let targetNode = findNode(targetNodeName);
+        let targetNode = findNode(targetNodeName, nodes.current);
 
         if (!targetNode) {
             targetNode = new Node(targetNodeName, 1200, 500);
@@ -263,10 +144,6 @@ export function Prims() {
         initializeCytoscape();
 
         closeModal();
-    }
-
-    const findNode = (name) => {
-        return nodes.current.filter(node => node.name === name)[0];
     }
 
     return (
