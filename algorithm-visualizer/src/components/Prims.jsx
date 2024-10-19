@@ -256,7 +256,7 @@ export function Prims() {
         }
 
         const edgeName = e.target[0].value;
-        const weight = e.target[3].value;
+        const weight = parseInt(e.target[3].value);
         const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
         edges.current.push(newEdge);
 

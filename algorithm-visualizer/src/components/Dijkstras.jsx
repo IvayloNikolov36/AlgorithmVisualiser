@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
-import { setTimeOutAfter } from '../helpers/thread-sleep';
-import { EdgesGroup, MarkedColor, NodesGroup, WaitInSeconds } from '../constants/graph-constants';
+import { EdgesGroup, MarkedColor, NodesGroup } from '../constants/graph-constants';
 import cytoscape from 'cytoscape';
 import { Button, ButtonGroup, Form, Modal, Table } from 'react-bootstrap';
-import { maxBy, sortBy } from 'lodash';
+import { maxBy } from 'lodash';
 import PriorityQueue from 'js-priority-queue/priority-queue';
 
 export function Dijkstras() {
@@ -176,7 +175,7 @@ export function Dijkstras() {
         }
 
         const edgeName = e.target[0].value;
-        const weight = e.target[3].value;
+        const weight = parseInt(e.target[3].value);
         const newEdge = new Edge(edgeName, sourceNode, targetNode, weight);
         edges.current.push(newEdge);
 
