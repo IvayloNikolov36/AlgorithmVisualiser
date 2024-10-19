@@ -57,25 +57,22 @@ export function Dijkstras() {
     }
 
     const getInitialEdges = () => {
-        return [
-            new Edge('0-6', findNode('0', nodes.current), findNode('6', nodes.current), 10),
-            new Edge('0-8', findNode('0', nodes.current), findNode('8', nodes.current), 12),
-            new Edge('6-4', findNode('6', nodes.current), findNode('4', nodes.current), 17),
-            new Edge('6-5', findNode('6', nodes.current), findNode('5', nodes.current), 6),
-            new Edge('4-1', findNode('4', nodes.current), findNode('1', nodes.current), 20),
-            new Edge('4-3', findNode('4', nodes.current), findNode('3', nodes.current), 11),
-            new Edge('5-4', findNode('5', nodes.current), findNode('4', nodes.current), 5),
-            new Edge('5-3', findNode('5', nodes.current), findNode('3', nodes.current), 33),
-            new Edge('8-5', findNode('8', nodes.current), findNode('5', nodes.current), 3),
-            new Edge('8-2', findNode('8', nodes.current), findNode('2', nodes.current), 14),
-            new Edge('2-3', findNode('2', nodes.current), findNode('3', nodes.current), 9),
-            new Edge('2-7', findNode('2', nodes.current), findNode('7', nodes.current), 15),
-            new Edge('3-1', findNode('3', nodes.current), findNode('1', nodes.current), 6),
-            new Edge('3-7', findNode('3', nodes.current), findNode('7', nodes.current), 20),
-            new Edge('1-9', findNode('1', nodes.current), findNode('9', nodes.current), 5),
-            new Edge('1-7', findNode('1', nodes.current), findNode('7', nodes.current), 26),
-            new Edge('7-9', findNode('7', nodes.current), findNode('9', nodes.current), 3),
-        ];
+        const edgesNames = ['0-6', '0-8', '6-4', '6-5', '4-1', '4-3', '5-4', '5-3', '8-5', '8-2', '2-3', '2-7', '3-1', '3-7', '1-9', '1-7', '7-9'];
+        
+        const weights = [10, 12, 17, 6, 20, 11, 5, 33, 3, 14, 9, 15, 6, 20, 5, 26, 3];
+
+        const edges = edgesNames.map((edgeName, index) => {
+            const tokens = edgeName.split('-');
+            const firstNode = tokens[0];
+            const secondNode = tokens[1];
+            return new Edge(
+                edgeName,
+                findNode(firstNode, nodes.current),
+                findNode(secondNode, nodes.current),
+                weights[index]);
+        });
+
+        return edges;
     }
 
     const initializeDistancesArray = () => {

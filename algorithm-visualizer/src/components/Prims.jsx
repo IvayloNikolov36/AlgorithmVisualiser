@@ -97,16 +97,18 @@ export function Prims() {
     }
 
     const getInitialEdges = () => {
-        return [
-            new Edge('ab', nodes.current[0], nodes.current[1], 4),
-            new Edge('ac', nodes.current[0], nodes.current[2], 5),
-            new Edge('ad', nodes.current[0], nodes.current[3], 9),
-            new Edge('bd', nodes.current[1], nodes.current[3], 2),
-            new Edge('cd', nodes.current[2], nodes.current[3], 20),
-            new Edge('ce', nodes.current[2], nodes.current[4], 7),
-            new Edge('ed', nodes.current[4], nodes.current[3], 8),
-            new Edge('ef', nodes.current[4], nodes.current[5], 12)
-        ];
+        const edgeNames = ['ab', 'ac', 'ad', 'bd', 'cd', 'ce', 'ed', 'ef'];
+        const weights = [4, 5, 9, 2, 20, 7, 8, 12];
+
+        const edges = edgeNames.map((edgeName, index) => {
+            return new Edge(
+                edgeName,
+                findNode(edgeName[0], nodes.current),
+                findNode(edgeName[1], nodes.current),
+                weights[index]);
+        });
+
+        return edges;
     }
 
     const openModal = () => {
