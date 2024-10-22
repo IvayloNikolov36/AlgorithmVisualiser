@@ -18,7 +18,7 @@ function App() {
     <Router>
       <Header />
       <Routes>
-        <Route path="/" exact element={<MazeMatrix />} />
+        <Route path="/" exact element={<Dijkstras />} />
         <Route path={routes.PathFinding} element={<MazeMatrix />} />
         <Route path={routes.EightQueens} element={<EightQueens />} />
         <Route path={routes.TowerOfHanoi} element={<HanoiTower />} />

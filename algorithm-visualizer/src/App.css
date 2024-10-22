@@ -20,6 +20,11 @@
   text-decoration: none;
   color: white;
   margin-right: 1.25rem;
+  cursor: pointer;
+}
+
+.nav a.active {
+  color: rgb(5, 5, 207);
 }
 
 /* --- Maze --- */

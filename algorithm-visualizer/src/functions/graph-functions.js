@@ -32,7 +32,7 @@ export function addEdge(data, nodes, edges) {
     let sourceNode = findNode(sourceNodeName, nodes);
 
     if (!sourceNode) {
-        sourceNode = new Node(sourceNodeName, 1200, 500);
+        sourceNode = new Node(sourceNodeName, 1150, 480);
         nodes.push(sourceNode);
     }
 
@@ -40,7 +40,7 @@ export function addEdge(data, nodes, edges) {
     let targetNode = findNode(targetNodeName, nodes);
 
     if (!targetNode) {
-        targetNode = new Node(targetNodeName, 1200, 500);
+        targetNode = new Node(targetNodeName, 1200, 520);
         nodes.push(targetNode);
     }
 

@@ -326,7 +326,7 @@ export function Dijkstras() {
                         </Form.Group>
                         <Form.Group className="mb-3" controlId="formGroupEmail">
                             <Form.Label>Weight</Form.Label>
-                            <Form.Control placeholder="Enter weight" />
+                            <Form.Control placeholder="Enter weight" type="number" min={'0'} />
                         </Form.Group>
                     </Form>
                 </Modal.Body>

@@ -265,7 +265,6 @@ export function EightQueens() {
                                 <Form.Range
                                     value={rangeValue}
                                     onChange={(e) => setAnimationSpeed(e.target.value)}
-                                    disabled={isPlacingQueens}
                                     step={RangeStep}
                                 />
                             </Col>
