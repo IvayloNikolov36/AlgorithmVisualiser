@@ -42,7 +42,22 @@ export function Prims() {
         const comparator = function (a, b) { return a.weight - b.weight };
         let priorityQueue = new PriorityQueue({ comparator });
 
-        let currentNode = nodes.current[0];
+        await findSpanningTree(nodes.current[0], markedNodes, priorityQueue, spanningTreeEdges);
+
+        let notVisited = findNotVisitedNodes(markedNodes);
+
+        while (notVisited.length > 0) {
+            priorityQueue.clear();
+            await findSpanningTree(notVisited[0], markedNodes, priorityQueue, spanningTreeEdges);
+            notVisited = findNotVisitedNodes(markedNodes);
+        }
+
+        setCanClearSpanningTree(true);
+    }
+
+    const findSpanningTree = async (startNode, markedNodes, priorityQueue, spanningTreeEdges) => {
+
+        let currentNode = startNode;
         markNode(cy.current, currentNode.name, MarkedColor);
         markedNodes.push(currentNode);
         let nodeEdges = getNodeEdges(edges.current, currentNode);
@@ -71,8 +86,10 @@ export function Prims() {
 
             enqueueElements(priorityQueue, nodeEdges);
         }
+    }
 
-        setCanClearSpanningTree(true);
+    const findNotVisitedNodes = (visited) => {
+        return nodes.current.filter(node => !visited.includes(node));
     }
 
     const enqueueElements = (queue, elements) => {
@@ -214,7 +231,7 @@ export function Prims() {
                         </Form.Group>
                         <Form.Group className="mb-3" controlId="formGroupEmail">
                             <Form.Label>Weight</Form.Label>
-                            <Form.Control placeholder="Enter weight" />
+                            <Form.Control placeholder="Enter weight" type="number" min={'0'}/>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
