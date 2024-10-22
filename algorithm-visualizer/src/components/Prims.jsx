@@ -23,6 +23,7 @@ export function Prims() {
 
     const [showModal, setShowModal] = useState(false);
     const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
+    const [canClearSpanningTree, setCanClearSpanningTree] = useState(false);
     const canDeleteNodes = useRef(false);
     const cy = useRef(null);
     const nodes = useRef([]);
@@ -70,6 +71,8 @@ export function Prims() {
 
             enqueueElements(priorityQueue, nodeEdges);
         }
+
+        setCanClearSpanningTree(true);
     }
 
     const enqueueElements = (queue, elements) => {
@@ -98,16 +101,19 @@ export function Prims() {
         return [
             new Node('a', 150, 10),
             new Node('b', 0, 400),
-            new Node('c', 500, 10),
+            new Node('c', 600, 80),
             new Node('d', 650, 400),
             new Node('e', 900, 110),
-            new Node('f', 1200, 250)
+            new Node('f', 1200, 250),
+            new Node('g', 1000, 350),
+            new Node('h', 1150, 50),
+            new Node('i', 220, 280)
         ];
     }
 
     const getInitialEdges = () => {
-        const edgeNames = ['ab', 'ac', 'ad', 'bd', 'cd', 'ce', 'ed', 'ef'];
-        const weights = [4, 5, 9, 2, 20, 7, 8, 12];
+        const edgeNames = ['ab', 'ac', 'ad', 'bd', 'cd', 'ce', 'ed', 'ef', 'fg', 'gd', 'eh', 'di'];
+        const weights = [4, 5, 9, 2, 15, 7, 8, 12, 4, 2, 3, 5];
 
         const edges = edgeNames.map((edgeName, index) => {
             return new Edge(
@@ -118,6 +124,20 @@ export function Prims() {
         });
 
         return edges;
+    }
+
+    const clearSpanningTree = () => {
+        nodes.current.forEach(node => unmarkNode(node.name));
+        edges.current.forEach(edge => unmarkEdge(edge.name));
+        setCanClearSpanningTree(false);
+    }
+
+    const unmarkNode = (nodeName) => {
+        markNode(cy.current, nodeName, '#0D6EFD');
+    }
+
+    const unmarkEdge = (edgeName) => {
+        markEdge(cy.current, edgeName, '#CCC');
     }
 
     const openModal = () => {
@@ -162,6 +182,9 @@ export function Prims() {
             <div className="d-flex justify-content-center gap-5 mt-2">
                 <Button onClick={startPrimsAlgorithm} variant="primary">
                     Find Min Spanning Tree
+                </Button>
+                <Button onClick={clearSpanningTree} disabled={!canClearSpanningTree} variant="outline-primary">
+                    Clear Spanning Tree
                 </Button>
                 <Button onClick={openModal} variant="outline-primary">
                     Add Edge
