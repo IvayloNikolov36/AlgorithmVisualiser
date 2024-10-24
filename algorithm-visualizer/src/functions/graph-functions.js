@@ -32,7 +32,7 @@ export function addEdge(data, nodes, edges) {
     let sourceNode = findNode(sourceNodeName, nodes);
 
     if (!sourceNode) {
-        sourceNode = new Node(sourceNodeName, 1150, 480);
+        sourceNode = new Node(sourceNodeName, 100, 460);
         nodes.push(sourceNode);
     }
 
@@ -40,7 +40,7 @@ export function addEdge(data, nodes, edges) {
     let targetNode = findNode(targetNodeName, nodes);
 
     if (!targetNode) {
-        targetNode = new Node(targetNodeName, 1200, 520);
+        targetNode = new Node(targetNodeName, 1200, 530);
         nodes.push(targetNode);
     }
 
@@ -96,6 +96,27 @@ export function getElements(nodes, edges) {
     });
 
     return [...nodesElements, ...edgesElements]
+}
+
+export function isGraphConnected(nodes, edges) {
+    const queue = [nodes[0]];
+    const visitedNodes = [];
+
+    while (queue.length > 0) {
+        const currentNode = queue.shift();
+        visitedNodes.push(currentNode.name);
+        const children = edges
+            .filter(edge => edge.source.name === currentNode.name
+                || edge.target.name === currentNode.name);
+        children.forEach(edge => {
+            const nodeToQueue = edge.source.name === currentNode.name ? edge.target : edge.source;
+            if (!queue.includes(nodeToQueue) && !visitedNodes.includes(nodeToQueue.name)) {
+                queue.push(nodeToQueue);
+            }
+        });
+    }
+
+    return nodes.every(node => visitedNodes.includes(node.name));
 }
 
 export function getStyles() {

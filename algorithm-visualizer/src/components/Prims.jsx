@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../models';
 import { setTimeOutAfter } from '../helpers/thread-sleep';
-import { MarkedColor, WaitInSeconds } from '../constants/graph-constants';
+import {
+    EdgeDefaultColor,
+    FindMinSpanForest,
+    FindMinSpanTree,
+    MarkedColor,
+    NodeDefaultColor,
+    WaitInSeconds
+} from '../constants/graph-constants';
 import {
     addEdge,
+    findNode,
     getCytoscapeOptions,
     getElements,
     getNodeEdges,
     getStyles,
-    findNode,
+    isGraphConnected,
     markEdge,
     markNode
 } from '../functions/graph-functions';
@@ -22,18 +30,32 @@ const SpacingFactor = 0.75;
 export function Prims() {
 
     const [showModal, setShowModal] = useState(false);
+    const [findSpanningLabel, setFindSpanningLabel] = useState('');
     const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
     const [canClearSpanningTree, setCanClearSpanningTree] = useState(false);
+    const [isConnected, setIsConnected] = useState(true);
+    const [isGraphModified, setIsGraphModified] = useState(false);
     const canDeleteNodes = useRef(false);
     const cy = useRef(null);
     const nodes = useRef([]);
     const edges = useRef([]);
 
     useEffect(() => {
+        initialize();
+    }, [])
+
+    const initialize = () => {
         nodes.current = getInitialNodes();
         edges.current = getInitialEdges();
+        defineTreeOrForest();
         initializeCytoscape();
-    }, [])
+    }
+
+    const defineTreeOrForest = () => {
+        const isConnected = isGraphConnected(nodes.current, edges.current);
+        setFindSpanningLabel(isConnected ? FindMinSpanTree : FindMinSpanForest);
+        setIsConnected(isConnected);
+    }
 
     const startPrimsAlgorithm = async () => {
 
@@ -149,12 +171,17 @@ export function Prims() {
         setCanClearSpanningTree(false);
     }
 
+    const resetGraph = () => {
+        initialize();
+        setIsGraphModified(false);
+    }
+
     const unmarkNode = (nodeName) => {
-        markNode(cy.current, nodeName, '#0D6EFD');
+        markNode(cy.current, nodeName, NodeDefaultColor);
     }
 
     const unmarkEdge = (edgeName) => {
-        markEdge(cy.current, edgeName, '#CCC');
+        markEdge(cy.current, edgeName, EdgeDefaultColor);
     }
 
     const openModal = () => {
@@ -168,6 +195,8 @@ export function Prims() {
     const handleSubmit = (event) => {
         event.preventDefault();
         addEdge(event.target, nodes.current, edges.current);
+        setIsGraphModified(true);
+        defineTreeOrForest();
         initializeCytoscape();
         closeModal();
     }
@@ -176,6 +205,8 @@ export function Prims() {
         setIsDeleteNodesActive(prev => {
             return !prev;
         });
+
+        setIsGraphModified(true);
 
         canDeleteNodes.current = !canDeleteNodes.current;
 
@@ -191,23 +222,27 @@ export function Prims() {
         nodes.current = nodes.current.filter(n => n.name !== nodeName);
         edges.current = edges.current
             .filter(e => e.source.name !== nodeName && e.target.name !== nodeName);
+        defineTreeOrForest();
         initializeCytoscape();
     }
 
     return (
         <>
             <div className="d-flex justify-content-center gap-5 mt-2">
-                <Button onClick={startPrimsAlgorithm} variant="primary">
-                    Find Min Spanning Tree
-                </Button>
-                <Button onClick={clearSpanningTree} disabled={!canClearSpanningTree} variant="outline-primary">
-                    Clear Spanning Tree
-                </Button>
                 <Button onClick={openModal} variant="outline-primary">
                     Add Edge
                 </Button>
                 <Button onClick={deleteNodes} active={isDeleteNodesActive} variant="outline-primary">
                     Delete Nodes
+                </Button>
+                <Button onClick={resetGraph} disabled={!isGraphModified} variant="outline-primary">
+                    Reset Graph
+                </Button>
+                <Button onClick={clearSpanningTree} disabled={!canClearSpanningTree} variant="outline-primary">
+                    Clear
+                </Button>
+                <Button onClick={startPrimsAlgorithm} variant="primary">
+                    {findSpanningLabel}
                 </Button>
             </div>
 
@@ -231,7 +266,7 @@ export function Prims() {
                         </Form.Group>
                         <Form.Group className="mb-3" controlId="formGroupEmail">
                             <Form.Label>Weight</Form.Label>
-                            <Form.Control placeholder="Enter weight" type="number" min={'0'}/>
+                            <Form.Control placeholder="Enter weight" type="number" min={'0'} />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
