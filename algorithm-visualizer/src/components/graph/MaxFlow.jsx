@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Edge, Node } from '../models';
-import { setTimeOutAfter } from '../helpers/thread-sleep';
+import { Edge, Node } from '../../models';
+import { setTimeOutAfter } from '../../helpers/thread-sleep';
 import {
     EdgeDefaultColor,
     FindMinSpanForest,
@@ -8,7 +8,7 @@ import {
     MarkedColor,
     NodeDefaultColor,
     WaitInSeconds
-} from '../constants/graph-constants';
+} from '../../constants/graph-constants';
 import {
     addEdge,
     findNode,
@@ -18,7 +18,7 @@ import {
     getStyles,
     markEdge,
     markNode
-} from '../functions/graph-functions';
+} from '../../functions/graph-functions';
 import cytoscape from 'cytoscape';
 import { Button, Form, Modal } from 'react-bootstrap';
 

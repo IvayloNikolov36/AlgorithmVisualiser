@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Edge, Node } from '../models';
-import { MarkedColor } from '../constants/graph-constants';
+import { Edge, Node } from '../../models';
+import { MarkedColor } from '../../constants/graph-constants';
 import {
     addEdge,
     getCytoscapeOptions,
@@ -10,7 +10,7 @@ import {
     findNode,
     markEdge,
     markNode
-} from '../functions/graph-functions';
+} from '../../functions/graph-functions';
 import cytoscape from 'cytoscape';
 import { Button, ButtonGroup, Form, Modal, Table } from 'react-bootstrap';
 import { maxBy } from 'lodash';
