@@ -9,6 +9,7 @@ export function Header() {
             <div className="d-flex justify-content-start align-middle nav">
                 <NavLink to={routes.Dijkstras}>Dijkstra's</NavLink>
                 <NavLink to={routes.Prims}>Prim's</NavLink>
+                <NavLink to={routes.MaxFlow}>Max Flow</NavLink>
                 <NavLink to={routes.Sorting}>Sorting</NavLink>
                 <NavLink to={routes.EightQueens}>Eight Queens</NavLink>
                 <NavLink to={routes.KnightsTour}>Knight's Tour</NavLink>

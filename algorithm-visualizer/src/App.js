@@ -6,9 +6,10 @@ import {
   HanoiTower,
   Header,
   KnightsTour,
+  MaxFlow,
   MazeMatrix,
   Prims,
-  SortingAlgorithms
+  SortingAlgorithms,
 } from './components';
 import { Routes as routes } from './enums/routes';
 
@@ -26,6 +27,7 @@ function App() {
         <Route path={routes.KnightsTour} element={<KnightsTour />} />
         <Route path={routes.Prims} element={<Prims />} />
         <Route path={routes.Dijkstras} element={<Dijkstras />} />
+        <Route path={routes.MaxFlow} element={<MaxFlow />} />
       </Routes>
     </Router>
   );

@@ -6,3 +6,4 @@ export * from './SortingAlgorithms';
 export * from './KnightsTour';
 export * from './Prims';
 export * from './Dijkstras';
+export * from './MaxFlow';

@@ -6,4 +6,5 @@ export const Routes = {
     KnightsTour: '/knights-rout',
     Prims: '/prims',
     Dijkstras: '/dijkstras',
+    MaxFlow: '/max-flow',
 }
