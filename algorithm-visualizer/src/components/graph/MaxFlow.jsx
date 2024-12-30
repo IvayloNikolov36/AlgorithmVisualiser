@@ -23,13 +23,17 @@ import cytoscape from 'cytoscape';
 import { Button, Form, Modal } from 'react-bootstrap';
 
 
+const StartNodeName = '0';
+const EndNodeName = '9';
 const SpacingFactor = 0.75;
 
 export function MaxFlow() {
 
+    const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
     const nodes = useRef([]);
     const edges = useRef([]);
     const cy = useRef(null);
+    const canDeleteNodes = useRef(false);
 
     const [showModal, setShowModal] = useState(false);
 
@@ -52,13 +56,26 @@ export function MaxFlow() {
             zoom: 1
         });
 
-        // if (canDeleteNodes.current) {
-        //     cyto.on('tap', 'node', removeNodeHandler);
-        // }
+        if (canDeleteNodes.current) {
+            cyto.on('tap', 'node', removeNodeHandler);
+        }
 
         cyto.userZoomingEnabled(false);
 
         cy.current = cyto;
+    }
+
+    const removeNodeHandler = function (event) {
+        const nodeName = event.target.id().toString();
+
+        if (nodeName === StartNodeName || nodeName === EndNodeName) {
+            return;
+        }
+
+        nodes.current = nodes.current.filter(n => n.name !== nodeName);
+        edges.current = edges.current.filter(e => e.source.name !== nodeName && e.target.name !== nodeName);
+
+        initializeCytoscape();
     }
 
     const getInitialNodes = () => {
@@ -115,7 +132,84 @@ export function MaxFlow() {
     }
 
     const startAlgorithm = () => {
+        console.log(findMaxFlow());
+    }
 
+    const findMaxFlow = () => {
+        let maxFlow = 0;
+        const startNode = '0';
+        const endNode = '9';
+        let parent = [];
+
+        while (bfs(startNode, endNode, parent)) {
+            let pathFlow = Number.MAX_VALUE;
+
+            let currentNode = endNode;
+
+            while (currentNode !== startNode) {
+                const previousNode = parent[currentNode];
+                const capacity = getEdge(previousNode, currentNode, edges.current).leftCapacity;
+                if (capacity < pathFlow) {
+                    pathFlow = capacity;
+                }
+                currentNode = previousNode;
+            }
+
+            maxFlow += pathFlow;
+
+            currentNode = endNode;
+
+            while (currentNode !== startNode) {
+                const previousNode = parent[currentNode];
+                const edge = getEdge(previousNode, currentNode, edges.current);
+                edge.leftCapacity -= pathFlow;
+                edge.flow += pathFlow;
+                currentNode = previousNode;
+            }
+
+            parent = [];
+        }
+
+        return maxFlow;
+    }
+
+    const getEdge = (firstNodeName, secondNodeName, edges) => {
+        return edges.filter(edge =>
+            (edge.source.name.toString() === firstNodeName.toString()
+                && edge.target.name.toString() === secondNodeName.toString())
+            || (edge.source.name.toString() === secondNodeName.toString()
+                && edge.target.name.toString() === firstNodeName.toString())
+        )[0];
+    }
+
+    const bfs = (startNodeName, endNodeName, parent) => {
+        const queue = [];
+        const visited = [];
+
+        queue.push(startNodeName);
+
+        while (queue.length > 0) {
+            const currentNodeName = queue.shift();
+            visited[parseInt(currentNodeName)] = true;
+
+            const nodeEdges = getEdges(currentNodeName, edges.current);
+
+            nodeEdges.forEach(edge => {
+                const childNodeName = edge.target.name === currentNodeName ? edge.source.name : edge.target.name;
+
+                if (edge.leftCapacity > 0 && !visited[parseInt(childNodeName)]) {
+                    queue.push(childNodeName)
+                    parent[parseInt(childNodeName)] = currentNodeName;
+                }
+            });
+        }
+
+        return visited[parseInt(endNodeName)];
+    }
+
+    const getEdges = (nodeName, edges) => {
+        return edges.filter(e => e.source.name.toString() === nodeName.toString()
+            || e.target.name.toString() === nodeName.toString());
     }
 
     const openModal = () => {
@@ -131,7 +225,17 @@ export function MaxFlow() {
     }
 
     const deleteNodes = () => {
+        setIsDeleteNodesActive(prev => {
+            return !prev;
+        });
 
+        canDeleteNodes.current = !canDeleteNodes.current;
+
+        if (canDeleteNodes.current) {
+            cy.current.on('tap', 'node', removeNodeHandler);
+        } else {
+            initializeCytoscape();
+        } 
     }
 
     return (
@@ -140,7 +244,7 @@ export function MaxFlow() {
                 <Button onClick={openModal} variant="outline-primary">
                     Add Edge
                 </Button>
-                <Button onClick={deleteNodes} variant="outline-primary">
+                <Button onClick={deleteNodes} active={isDeleteNodesActive} variant="outline-primary">
                     Delete Nodes
                 </Button>
                 <Button onClick={startAlgorithm} variant="primary">
