@@ -1,23 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edge, Node } from '../../models';
 import { setTimeOutAfter } from '../../helpers/thread-sleep';
+import { FlowColor, MarkedColor, NodeDefaultColor, OverFlowColor } from '../../constants/graph-constants';
 import {
-    EdgeDefaultColor,
-    FindMinSpanForest,
-    FindMinSpanTree,
-    MarkedColor,
-    NodeDefaultColor,
-    WaitInSeconds
-} from '../../constants/graph-constants';
-import {
-    addEdge,
     findNode,
     getCytoscapeOptions,
     getElements,
-    getNodeEdges,
     getStyles,
     markEdge,
-    markNode
+    markNode,
+    setEdgeData,
+    unmarkAllNodes
 } from '../../functions/graph-functions';
 import cytoscape from 'cytoscape';
 import { Button, Form, Modal } from 'react-bootstrap';
@@ -29,6 +22,8 @@ const SpacingFactor = 0.75;
 
 export function MaxFlow() {
 
+    const [maxFlow, setMaxFlow] = useState(null);
+    const [pathMaxFlow, setPathMaxFlow] = useState(null);
     const [isDeleteNodesActive, setIsDeleteNodesActive] = useState(false);
     const nodes = useRef([]);
     const edges = useRef([]);
@@ -44,13 +39,155 @@ export function MaxFlow() {
     const initialize = () => {
         nodes.current = getInitialNodes();
         edges.current = getInitialEdges();
-        initializeCytoscape();
+        initializeCytoscape(nodes.current, edges.current);
     }
 
-    const initializeCytoscape = () => {
+    const startAlgorithm = async () => {
+        setMaxFlow('calculating');
+        const maxFlowValue = await findMaxFlow();
+        setMaxFlow(maxFlowValue);
+    }
+
+    const findMaxFlow = async () => {
+        let maxFlow = 0;
+        const [startNode, endNode] = ['0', '9'];
+        let parent = [];
+
+        while (bfs(startNode, endNode, parent)) {
+
+            let pathFlow = Number.MAX_VALUE;
+            let currentNodeName = endNode;
+
+            const pathNodes = [endNode];
+            let pathEdges = [];
+
+            while (currentNodeName !== startNode) {
+                const previousNodeName = parent[currentNodeName];
+                const edge = getEdge(previousNodeName, currentNodeName, edges.current);
+
+                pathNodes.unshift(previousNodeName);
+                pathEdges.unshift(edge.name);
+
+                const edgeLeftCapacity = edge.capacity - edge.flow;
+
+                if (edgeLeftCapacity < pathFlow) {
+                    pathFlow = edgeLeftCapacity;
+                }
+
+                currentNodeName = previousNodeName;
+            }
+
+            maxFlow += pathFlow;
+
+            pathNodes.forEach(node => markNode(cy.current, node, MarkedColor));
+            pathEdges.forEach(edge => markEdge(cy.current, edge, MarkedColor));
+            setPathMaxFlow(pathFlow);
+            await setTimeOutAfter(2);
+
+            currentNodeName = endNode;
+
+            for (let edgeName of pathEdges) {
+
+                const edge = edges.current.find(e => e.name === edgeName);
+                edge.flow += pathFlow;
+
+                const edgeWeight = `${edge.flow}/${edge.capacity}`;
+                setEdgeData(cy.current, edge.name, 'weight', edgeWeight);
+
+                const isEdgeMaxFlowReached = edge.flow === edge.capacity;
+                if (isEdgeMaxFlowReached) {
+                    pathEdges = pathEdges.filter(edgeName => edgeName !== edge.name);
+                }
+
+                markNode(cy.current, edge.source.name, NodeDefaultColor);
+                markEdge(cy.current, edge.name, isEdgeMaxFlowReached ? OverFlowColor : FlowColor);
+                markNode(cy.current, edge.target.name, NodeDefaultColor);
+                await setTimeOutAfter(2);
+            }
+
+            parent = [];
+
+            unmarkAllNodes(cy.current);
+            setPathMaxFlow(null);
+            setMaxFlow(maxFlow);
+            await setTimeOutAfter(2);
+        }
+
+        return maxFlow;
+    }
+
+    const bfs = (startNodeName, endNodeName, parent) => {
+        const queue = [];
+        const visited = [];
+        queue.push(startNodeName);
+
+        while (queue.length > 0) {
+            const currentNodeName = queue.shift();
+            visited[parseInt(currentNodeName)] = true;
+
+            const nodeEdges = getEdges(currentNodeName, edges.current);
+
+            nodeEdges.forEach(edge => {
+                const childNodeName = edge.target.name === currentNodeName
+                    ? edge.source.name
+                    : edge.target.name;
+
+                const hasLeftCapacity = edge.flow < edge.capacity;
+
+                if (hasLeftCapacity && !visited[parseInt(childNodeName)]) {
+                    queue.push(childNodeName);
+                    parent[parseInt(childNodeName)] = currentNodeName;
+                }
+            });
+        }
+
+        return visited[parseInt(endNodeName)];
+    }
+
+    const getEdges = (nodeName, edges) => {
+        return edges.filter(e => e.source.name.toString() === nodeName.toString()
+            || e.target.name.toString() === nodeName.toString());
+    }
+
+    const getEdge = (firstNodeName, secondNodeName, edges) => {
+        return edges.filter(edge =>
+            (edge.source.name.toString() === firstNodeName.toString()
+                && edge.target.name.toString() === secondNodeName.toString())
+            || (edge.source.name.toString() === secondNodeName.toString()
+                && edge.target.name.toString() === firstNodeName.toString())
+        )[0];
+    }
+
+    const openModal = () => {
+
+    }
+
+    const closeModal = () => {
+
+    }
+
+    const handleSubmit = () => {
+
+    }
+
+    const deleteNodes = () => {
+        setIsDeleteNodesActive(prev => {
+            return !prev;
+        });
+
+        canDeleteNodes.current = !canDeleteNodes.current;
+
+        if (canDeleteNodes.current) {
+            cy.current.on('tap', 'node', removeNodeHandler);
+        } else {
+            initializeCytoscape(nodes.current, edges.current);
+        }
+    }
+
+    const initializeCytoscape = (nodes, edges) => {
         const cyto = cytoscape({
             container: document.getElementById('cy'),
-            elements: getElements(nodes.current, edges.current),
+            elements: getElements(nodes, edges),
             style: getStyles(),
             layout: getCytoscapeOptions(SpacingFactor),
             zoom: 1
@@ -75,7 +212,7 @@ export function MaxFlow() {
         nodes.current = nodes.current.filter(n => n.name !== nodeName);
         edges.current = edges.current.filter(e => e.source.name !== nodeName && e.target.name !== nodeName);
 
-        initializeCytoscape();
+        initializeCytoscape(nodes.current, edges.current);
     }
 
     const getInitialNodes = () => {
@@ -131,116 +268,9 @@ export function MaxFlow() {
         return edges;
     }
 
-    const startAlgorithm = () => {
-        console.log(findMaxFlow());
-    }
-
-    const findMaxFlow = () => {
-        let maxFlow = 0;
-        const startNode = '0';
-        const endNode = '9';
-        let parent = [];
-
-        while (bfs(startNode, endNode, parent)) {
-            let pathFlow = Number.MAX_VALUE;
-
-            let currentNode = endNode;
-
-            while (currentNode !== startNode) {
-                const previousNode = parent[currentNode];
-                const capacity = getEdge(previousNode, currentNode, edges.current).leftCapacity;
-                if (capacity < pathFlow) {
-                    pathFlow = capacity;
-                }
-                currentNode = previousNode;
-            }
-
-            maxFlow += pathFlow;
-
-            currentNode = endNode;
-
-            while (currentNode !== startNode) {
-                const previousNode = parent[currentNode];
-                const edge = getEdge(previousNode, currentNode, edges.current);
-                edge.leftCapacity -= pathFlow;
-                edge.flow += pathFlow;
-                currentNode = previousNode;
-            }
-
-            parent = [];
-        }
-
-        return maxFlow;
-    }
-
-    const getEdge = (firstNodeName, secondNodeName, edges) => {
-        return edges.filter(edge =>
-            (edge.source.name.toString() === firstNodeName.toString()
-                && edge.target.name.toString() === secondNodeName.toString())
-            || (edge.source.name.toString() === secondNodeName.toString()
-                && edge.target.name.toString() === firstNodeName.toString())
-        )[0];
-    }
-
-    const bfs = (startNodeName, endNodeName, parent) => {
-        const queue = [];
-        const visited = [];
-
-        queue.push(startNodeName);
-
-        while (queue.length > 0) {
-            const currentNodeName = queue.shift();
-            visited[parseInt(currentNodeName)] = true;
-
-            const nodeEdges = getEdges(currentNodeName, edges.current);
-
-            nodeEdges.forEach(edge => {
-                const childNodeName = edge.target.name === currentNodeName ? edge.source.name : edge.target.name;
-
-                if (edge.leftCapacity > 0 && !visited[parseInt(childNodeName)]) {
-                    queue.push(childNodeName)
-                    parent[parseInt(childNodeName)] = currentNodeName;
-                }
-            });
-        }
-
-        return visited[parseInt(endNodeName)];
-    }
-
-    const getEdges = (nodeName, edges) => {
-        return edges.filter(e => e.source.name.toString() === nodeName.toString()
-            || e.target.name.toString() === nodeName.toString());
-    }
-
-    const openModal = () => {
-
-    }
-
-    const closeModal = () => {
-
-    }
-
-    const handleSubmit = () => {
-
-    }
-
-    const deleteNodes = () => {
-        setIsDeleteNodesActive(prev => {
-            return !prev;
-        });
-
-        canDeleteNodes.current = !canDeleteNodes.current;
-
-        if (canDeleteNodes.current) {
-            cy.current.on('tap', 'node', removeNodeHandler);
-        } else {
-            initializeCytoscape();
-        } 
-    }
-
     return (
         <>
-            <div className="d-flex justify-content-center gap-5 mt-2">
+            <div className="d-flex justify-content-start gap-5 mt-2 ms-5">
                 <Button onClick={openModal} variant="outline-primary">
                     Add Edge
                 </Button>
@@ -250,6 +280,8 @@ export function MaxFlow() {
                 <Button onClick={startAlgorithm} variant="primary">
                     Start
                 </Button>
+                {maxFlow !== null && <span>Max Flow: {maxFlow}</span>}
+                {pathMaxFlow !== null && <span>Path Max Flow: {pathMaxFlow}</span>}
             </div>
 
             <Modal show={showModal} onHide={closeModal}>

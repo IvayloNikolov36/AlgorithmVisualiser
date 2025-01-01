@@ -6,3 +6,5 @@ export const MarkedColor = '#FFFF00';
 export const NodeDefaultColor = '#0D6EFD';
 export const EdgeDefaultColor = '#CCC';
 export const WaitInSeconds = 0.45;
+export const OverFlowColor = '#3110C7';
+export const FlowColor = '#4893D9';

@@ -1,12 +1,31 @@
-import { EdgesGroup, NodesGroup } from '../constants/graph-constants';
+import { EdgeDefaultColor, EdgesGroup, NodeDefaultColor, NodesGroup } from '../constants/graph-constants';
 import { Edge, Node } from '../models';
 
 export function markNode(cytoscape, nodeName, color) {
     cytoscape.nodes(`[id = '${nodeName}']`).style('background-color', color);
 }
 
+export function unmarkAllNodes(cytoscape) {
+    cytoscape.nodes().style('background-color', NodeDefaultColor);
+}
+
 export function markEdge(cytoscape, edgeName, color) {
     cytoscape.edges(`[id = '${edgeName}']`).style('line-color', color);
+}
+
+export function setEdgeData(cytoscape, edgeName, dataProp, dataValue) {
+    const cyEdge = cytoscape.edges(`[id = '${edgeName}']`);
+    cyEdge.data(dataProp, dataValue);
+}
+
+export function unmarkEdges(cytoscape, edgeNames) {
+    edgeNames.forEach(edgeName => {
+        cytoscape.edges(`[id = '${edgeName}']`).style('line-color', EdgeDefaultColor);    
+    });
+}
+
+export function unmarkAllEdges(cytoscape) {
+    cytoscape.edges().style('line-color', EdgeDefaultColor);
 }
 
 export function getNodeEdges(edges, node) {

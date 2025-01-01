@@ -5,6 +5,6 @@ export class Edge {
         this.target = target;
         this.weight = weight;
         this.flow = 0;
-        this.leftCapacity = weight; // TODO: create another class
+        this.capacity = weight; // TODO: create another class
     }
 }
